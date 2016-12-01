@@ -11,11 +11,12 @@ import sim.engine.SimState;
 import sim.util.Bag;
 import sim.util.Double2D;
 import sim.util.Int2D;
+import sim.util.WordWrap;
 
 public class ExplorerAgent implements sim.portrayal.Oriented2D {
 
 	private static final long serialVersionUID = 1L;
-	private float INTEREST_THRESHOLD = 65;
+	private float INTEREST_THRESHOLD = 35;
 	private final double STEP = Math.sqrt(2);
 	private final int viewRange = 40;
 	
@@ -66,7 +67,7 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 						mapper.identify(obj, highest);
 						Class real = env.identifyObject(obj.loc).getClass();
 						//if (highest != real)
-						//	System.err.println(real.getSimpleName());
+							//System.err.println(real.getSimpleName());
 						
 						broker.removePointOfInterest(obj.loc);
 
@@ -237,10 +238,42 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 				corr3 = 1 - (0.5 * colorDistUpper + 0.5 * sizeDistUpper);
 				corr3 = Utils.saturate(corr3, prot.nOccurrs);
 				
-				probs.put(prot.thisClass, corr1*corr2*corr3);
-				corrSum += corr1*corr2*corr3;
-
 				corr = (corr1+corr2+corr3)/3;
+				
+				Class[][] identifiedObjects = mapper.identifiedObjects;
+				int k=Math.min(prot.nOccurrs, 10);
+				if(nClasses>=2 && prot.nOccurrs>60){
+					double knnCor = Utils.getKNN(identifiedObjects,prot,mapper,env,k,obj);
+					//System.out.println("============");
+					//System.out.println(knnCor);
+					INTEREST_THRESHOLD = 40;
+					corr *= (1+knnCor);
+				}
+				if(nClasses>2 && prot.nOccurrs>70){
+					INTEREST_THRESHOLD = 50;
+				}
+				if(nClasses>2 && prot.nOccurrs>80){
+					INTEREST_THRESHOLD = 55;
+				}
+				if(nClasses>2 && prot.nOccurrs>90){
+					INTEREST_THRESHOLD = 60;
+				}
+				if(nClasses>2 && prot.nOccurrs>100){
+					INTEREST_THRESHOLD = 65;
+				}
+				if(nClasses>2 && prot.nOccurrs>110){
+					INTEREST_THRESHOLD = 70;
+				}
+				if(nClasses>2 && prot.nOccurrs>120){
+					INTEREST_THRESHOLD = 75;
+				}
+				if(nClasses>2 && prot.nOccurrs>130){
+					INTEREST_THRESHOLD = 80;
+				}
+				
+				probs.put(prot.thisClass, corr);
+				corrSum += corr;
+
 				unknownCorr += (1 - corr) / nClasses;
 				
 				if((obj.size > prot.getSizeQuantile(new Float(0.75)) || obj.size < prot.getSizeQuantile(new Float(0.25))) || 
@@ -259,8 +292,9 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 			unknownCorr = 1.0;
 		}
 			
-		probs.put(SimObject.class, unknownCorr*unknownCorr*unknownCorr);
-		corrSum += unknownCorr*unknownCorr*unknownCorr;
+		probs.put(SimObject.class, unknownCorr);
+		corrSum += unknownCorr;
+		//System.out.println(env.identifyObject(obj.getLoc()));
 
 		for (Class c : probs.keySet()) {
 			
@@ -268,6 +302,7 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 			//System.out.println(c.getSimpleName() + " : " + probs.get(c));
 		}
 
+		//System.out.println("============");
 		return probs;
 	}
 
