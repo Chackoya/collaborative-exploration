@@ -182,7 +182,10 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 		double unknownCorr = 0;
 		double corrSum = 0;
 
-		Boolean oldCorrelation = true;
+		
+		//change setup
+		Boolean oldCorrelation = false;
+		int outOfQuantile = 0;
 		
 		if(oldCorrelation){
 			for (Prototype prot : prototypes) {
@@ -236,12 +239,23 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 				corrSum += corr*corr*corr;
 
 				unknownCorr += (1 - corr) / nClasses;
+				
+				if((obj.size > prot.getSizeQuantile(new Float(0.75)) || obj.size < prot.getSizeQuantile(new Float(0.25))) || 
+					((obj.color.getRed() > prot.getRedQuantile(new Float(0.75)) || obj.color.getRed() < prot.getRedQuantile(new Float(0.25))) &&
+					(obj.color.getGreen() > prot.getGreenQuantile(new Float(0.75)) || obj.color.getGreen() < prot.getGreenQuantile(new Float(0.25))) &&
+					(obj.color.getBlue() > prot.getBlueQuantile(new Float(0.75)) || obj.color.getBlue() < prot.getBlueQuantile(new Float(0.25))))  ){
+					outOfQuantile++;
+				}
 			}
 		}
 		
 
 		if (nClasses == 0)
 			unknownCorr = 1.0;
+		if(outOfQuantile == nClasses && outOfQuantile>0){
+			unknownCorr = 1.0;
+		}
+			
 		probs.put(SimObject.class, unknownCorr*unknownCorr*unknownCorr);
 		corrSum += unknownCorr*unknownCorr*unknownCorr;
 

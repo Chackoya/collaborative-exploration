@@ -71,25 +71,25 @@ public class Prototype {
 		return color;
 	}
 	public double getSizeQuantile(float quant){
-		int index = Math.round(allSizes.size()*quant)-1;
+		int index = Math.max(0, Math.round(allSizes.size()*quant)-1);
 		double q = allSizes.get(index);
 		
 		return q;
 	}
 	public int getRedQuantile(float quant){
-		int index = Math.round(allColorsRed.size()*quant)-1;
+		int index = Math.max(0, Math.round(allColorsRed.size()*quant)-1);
 		int q = allColorsRed.get(index);
 		
 		return q;
 	}
 	public int getGreenQuantile(float quant){
-		int index = Math.round(allColorsGreen.size()*quant)-1;
+		int index = Math.max(0, Math.round(allColorsGreen.size()*quant)-1);
 		int q = allColorsGreen.get(index);
 		
 		return q;
 	}
 	public int getBlueQuantile(float quant){
-		int index = Math.round(allColorsBlue.size()*quant)-1;
+		int index = Math.max(0, Math.round(allColorsBlue.size()*quant)-1);
 		int q = allColorsBlue.get(index);
 		
 		return q;
