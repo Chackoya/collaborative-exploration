@@ -182,22 +182,63 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 		double unknownCorr = 0;
 		double corrSum = 0;
 
-		for (Prototype prot : prototypes) {
-			// TODO: Stuff here
-			double corr;
-			double colorDist = Utils.colorDistance(obj.color, prot.color);
-			double sizeDist = Math.abs(obj.size - prot.size) / Utils.MAX_SIZE;
+		Boolean oldCorrelation = true;
+		
+		if(oldCorrelation){
+			for (Prototype prot : prototypes) {
+				// TODO: Stuff here
+				double corr;
+				double colorDist = Utils.colorDistance(obj.color, prot.color);
+				double sizeDist = Math.abs(obj.size - prot.size) / Utils.MAX_SIZE;
 
-			// Correlation
-			corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
-			// Saturation
-			corr = Utils.saturate(corr, prot.nOccurrs);
+				// Correlation
+				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
+				// Saturation
+				corr = Utils.saturate(corr, prot.nOccurrs);
 
-			probs.put(prot.thisClass, corr*corr*corr);
-			corrSum += corr*corr*corr;
+				probs.put(prot.thisClass, corr*corr*corr);
+				corrSum += corr*corr*corr;
 
-			unknownCorr += (1 - corr) / nClasses;
+				unknownCorr += (1 - corr) / nClasses;
+			}
 		}
+		else{
+			for (Prototype prot : prototypes) {
+				// TODO: Stuff here
+				double corr;
+				double colorDistMedian = Utils.colorDistance(obj.color, 
+														prot.getRedQuantile(new Float(0.5)),
+														prot.getGreenQuantile(new Float(0.5)),
+														prot.getBlueQuantile(new Float(0.5)));
+				double sizeDistMedian = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.5))) / Utils.MAX_SIZE;
+				
+				double colorDistUpper = Utils.colorDistance(obj.color, 
+						prot.getRedQuantile(new Float(0.75)),
+						prot.getGreenQuantile(new Float(0.75)),
+						prot.getBlueQuantile(new Float(0.75)));
+				double sizeDistUpper = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.75))) / Utils.MAX_SIZE;
+				
+				double colorDistLower = Utils.colorDistance(obj.color, 
+						prot.getRedQuantile(new Float(0.25)),
+						prot.getGreenQuantile(new Float(0.25)),
+						prot.getBlueQuantile(new Float(0.25)));
+				double sizeDistLower = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.25))) / Utils.MAX_SIZE;
+
+				double colorDist = (colorDistUpper+2*colorDistMedian+colorDistLower)/4;
+				double sizeDist = (sizeDistUpper+2*sizeDistMedian+sizeDistLower)/4;
+				
+				// Correlation
+				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
+				// Saturation
+				corr = Utils.saturate(corr, prot.nOccurrs);
+
+				probs.put(prot.thisClass, corr*corr*corr);
+				corrSum += corr*corr*corr;
+
+				unknownCorr += (1 - corr) / nClasses;
+			}
+		}
+		
 
 		if (nClasses == 0)
 			unknownCorr = 1.0;

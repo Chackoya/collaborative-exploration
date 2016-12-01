@@ -82,6 +82,19 @@ public class Utils {
 		return dist;
 	}
 
+	public static double colorDistance(Color color, int r, int g, int b) {
+		double r1 = color.getRed(); double g1 = color.getGreen(); double b1 = color.getBlue();
+		
+		double dist = (r1-r)*(r1-r)+(g1-g)*(g1-g)+(b1-b)*(b1-b);
+		
+		
+		dist = dist/COLOR_DIST;
+		
+		if (dist>1) dist = 1;
+		
+		return dist;
+	}
+
 	public static Color avgColor(Color color, Color color2, int nOccurrs) {
 		double r1 = color.getRed(); double g1 = color.getGreen(); double b1 = color.getBlue();
 		double r2 = color2.getRed(); double g2 = color2.getGreen(); double b2 = color2.getBlue();
