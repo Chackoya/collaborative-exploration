@@ -208,7 +208,7 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 		else{
 			for (Prototype prot : prototypes) {
 				// TODO: Stuff here
-				double corr;
+				double corr1,corr2,corr3,corr;
 				double colorDistMedian = Utils.colorDistance(obj.color, 
 														prot.getRedQuantile(new Float(0.5)),
 														prot.getGreenQuantile(new Float(0.5)),
@@ -226,18 +226,21 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 						prot.getGreenQuantile(new Float(0.25)),
 						prot.getBlueQuantile(new Float(0.25)));
 				double sizeDistLower = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.25))) / Utils.MAX_SIZE;
-
-				double colorDist = (colorDistUpper+2*colorDistMedian+colorDistLower)/4;
-				double sizeDist = (sizeDistUpper+2*sizeDistMedian+sizeDistLower)/4;
 				
-				// Correlation
-				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
-				// Saturation
-				corr = Utils.saturate(corr, prot.nOccurrs);
+				// Correlation and saturation
+				corr1 = 1 - (0.5 * colorDistMedian + 0.5 * sizeDistMedian);
+				corr1 = Utils.saturate(corr1, prot.nOccurrs);
 
-				probs.put(prot.thisClass, corr*corr*corr);
-				corrSum += corr*corr*corr;
+				corr2 = 1 - (0.5 * colorDistLower + 0.5 * sizeDistLower);
+				corr2 = Utils.saturate(corr2, prot.nOccurrs);
 
+				corr3 = 1 - (0.5 * colorDistUpper + 0.5 * sizeDistUpper);
+				corr3 = Utils.saturate(corr3, prot.nOccurrs);
+				
+				probs.put(prot.thisClass, corr1*corr2*corr3);
+				corrSum += corr1*corr2*corr3;
+
+				corr = (corr1+corr2+corr3)/3;
 				unknownCorr += (1 - corr) / nClasses;
 				
 				if((obj.size > prot.getSizeQuantile(new Float(0.75)) || obj.size < prot.getSizeQuantile(new Float(0.25))) || 

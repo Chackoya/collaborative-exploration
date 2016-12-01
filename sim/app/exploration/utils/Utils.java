@@ -18,7 +18,7 @@ public class Utils {
 		double interest;
 		
 		// 2 - multiplying factor to make it scale better =P
-		interest = Math.tanh(2*prob);
+		interest = Math.min(1, Math.tanh(2*prob)*2);
 		
 		return interest;
 	}
