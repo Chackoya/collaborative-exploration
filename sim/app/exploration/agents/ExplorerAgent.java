@@ -246,29 +246,27 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 					double knnCor = Utils.getKNN(identifiedObjects,prot,mapper,env,k,obj);
 					//System.out.println("============");
 					//System.out.println(knnCor);
-					INTEREST_THRESHOLD = 40;
-					corr *= (1+knnCor);
+					INTEREST_THRESHOLD = 45;
+					//corr = Math.max(1, knnCor*2);
+					corr = knnCor;
 				}
-				if(nClasses>2 && prot.nOccurrs>70){
+				if(nClasses>2 && prot.nOccurrs>65){
 					INTEREST_THRESHOLD = 50;
 				}
-				if(nClasses>2 && prot.nOccurrs>80){
+				if(nClasses>2 && prot.nOccurrs>70){
 					INTEREST_THRESHOLD = 55;
 				}
-				if(nClasses>2 && prot.nOccurrs>90){
+				if(nClasses>2 && prot.nOccurrs>80){
 					INTEREST_THRESHOLD = 60;
 				}
-				if(nClasses>2 && prot.nOccurrs>100){
+				if(nClasses>2 && prot.nOccurrs>90){
 					INTEREST_THRESHOLD = 65;
 				}
-				if(nClasses>2 && prot.nOccurrs>110){
+				if(nClasses>2 && prot.nOccurrs>100){
 					INTEREST_THRESHOLD = 70;
 				}
-				if(nClasses>2 && prot.nOccurrs>120){
+				if(nClasses>2 && prot.nOccurrs>110){
 					INTEREST_THRESHOLD = 75;
-				}
-				if(nClasses>2 && prot.nOccurrs>130){
-					INTEREST_THRESHOLD = 80;
 				}
 				
 				probs.put(prot.thisClass, corr);
