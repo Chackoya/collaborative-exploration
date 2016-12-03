@@ -44,7 +44,7 @@ public class Viewer extends GUIState{
     	super(state);
     }
 	
-	public static String getName() { return "Collaborative Exploration: IA 2010"; }
+	public static String getName() { return "Collaborative Exploration: IA 2016"; }
 
 	public void start(){
     	super.start();

@@ -1,12 +1,19 @@
 package sim.app.exploration.utils;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Random;
 import java.util.Vector;
 
 import sim.app.exploration.agents.ExplorerAgentParent;
+import sim.app.exploration.agents.MapperAgent;
+import sim.app.exploration.env.SimEnvironment;
+import sim.app.exploration.objects.Prototype;
 import sim.app.exploration.objects.SimObject;
+import sim.app.exploration.objects.KnnObject;
+import sim.util.Int2D;
 
 public class Utils {
 
@@ -17,7 +24,7 @@ public class Utils {
 		double interest;
 		
 		// 2 - multiplying factor to make it scale better =P
-		interest = Math.tanh(2*prob);
+		interest = Math.min(1, Math.tanh(2*prob));
 		
 		return interest;
 	}
@@ -34,8 +41,9 @@ public class Utils {
 	}
 	
 	public static double saturate(double corr, int nOcurrs){
-		
-		double sat = (Math.tanh( (nOcurrs-5)/2.0 ) + 1.0 ) / 2.0;
+		double sat = (Math.tanh( (nOcurrs-5)/2.0 ) + 1.0 )/2;
+		//new idea
+		//double sat = (Math.tanh( (Math.log(nOcurrs)-5)/2.0 ) + 1.0 );
 		corr = corr*sat;
 		
 		return corr;
@@ -81,6 +89,19 @@ public class Utils {
 		return dist;
 	}
 
+	public static double colorDistance(Color color, int r, int g, int b) {
+		double r1 = color.getRed(); double g1 = color.getGreen(); double b1 = color.getBlue();
+		
+		double dist = (r1-r)*(r1-r)+(g1-g)*(g1-g)+(b1-b)*(b1-b);
+		
+		
+		dist = dist/COLOR_DIST;
+		
+		if (dist>1) dist = 1;
+		
+		return dist;
+	}
+
 	public static Color avgColor(Color color, Color color2, int nOccurrs) {
 		double r1 = color.getRed(); double g1 = color.getGreen(); double b1 = color.getBlue();
 		double r2 = color2.getRed(); double g2 = color2.getGreen(); double b2 = color2.getBlue();
@@ -98,5 +119,47 @@ public class Utils {
 	public static double getRandomRange(double baseline, double delta) {
 		if (delta == 0) return baseline;
 		return Math.random()*(2*delta) + (baseline - delta);
+	}
+
+	public static double getKNN(Class[][] identifiedObjects, Prototype prot, MapperAgent mapper, SimEnvironment env,int k, SimObject unknownObj) {
+		double dist=0;
+		SimObject obj;
+		ArrayList<KnnObject> objects = new ArrayList();
+		
+		//create list of near objects to unknown object
+		for(int i=0;i<400;i++){
+			for(int j=0;j<300;j++){
+				if(mapper.isIdentified(new Int2D(i,j))){
+					obj=env.identifyObject(new Int2D(i,j));
+					dist=0;
+					dist += colorDistance(unknownObj.getColor(), obj.getColor()) * colorDistance(unknownObj.getColor(), obj.getColor());
+					dist += Math.abs(obj.getSize() - unknownObj.getSize()) * Math.abs(obj.getSize() - unknownObj.getSize());
+					if(objects.size()<10){
+						objects.add(new KnnObject(dist, obj.getClass()));
+						//sorting now so that we always start with a sorted list in the else
+						Collections.sort(objects,(o1,o2)-> Double.compare(o1.getDist(),o2.getDist()));
+					}
+					else{
+						if(dist < objects.get(k-1).getDist()){
+							objects.set(k-1, new KnnObject(dist, obj.getClass()));
+							Collections.sort(objects,(o1,o2)-> Double.compare(o1.getDist(),o2.getDist()));
+						}						
+					}					
+				}
+			}
+		}
+		
+		//count how many objects of the prototype class are inside there
+		double count=0;
+		//System.out.println("=============");
+		//System.out.println(prot.thisClass);
+		for(int i=0;i<k;i++){
+			//System.out.println(objects.get(i).getThisClass());
+			if(objects.get(i).getThisClass()==prot.thisClass){
+				count ++;
+			}
+		}
+		//System.out.println(count/k);
+		return count/k;
 	}
 }

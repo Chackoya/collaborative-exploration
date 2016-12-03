@@ -11,6 +11,7 @@ import sim.engine.SimState;
 import sim.util.Bag;
 import sim.util.Double2D;
 import sim.util.Int2D;
+import sim.util.WordWrap;
 
 public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
@@ -18,6 +19,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 	protected float INTEREST_THRESHOLD = 65;
 	protected final double STEP = Math.sqrt(2);
 	protected final int viewRange = 40;
+
 	
 	protected int identifyClock;
 
@@ -58,7 +60,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 						mapper.identify(obj, highest);
 						Class real = env.identifyObject(obj.loc).getClass();
 						//if (highest != real)
-						//	System.err.println(real.getSimpleName());
+							//System.err.println(real.getSimpleName());
 						
 						broker.removePointOfInterest(obj.loc);
 
@@ -174,27 +176,116 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 		double unknownCorr = 0;
 		double corrSum = 0;
 
-		for (Prototype prot : prototypes) {
-			// TODO: Stuff here
-			double corr;
-			double colorDist = Utils.colorDistance(obj.color, prot.color);
-			double sizeDist = Math.abs(obj.size - prot.size) / Utils.MAX_SIZE;
+		
+		//change setup
+		Boolean oldCorrelation = false;
+		int outOfQuantile = 0;
+		
+		if(oldCorrelation){
+			for (Prototype prot : prototypes) {
+				// TODO: Stuff here
+				double corr;
+				double colorDist = Utils.colorDistance(obj.color, prot.color);
+				double sizeDist = Math.abs(obj.size - prot.size) / Utils.MAX_SIZE;
 
-			// Correlation
-			corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
-			// Saturation
-			corr = Utils.saturate(corr, prot.nOccurrs);
+				// Correlation
+				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
+				// Saturation
+				corr = Utils.saturate(corr, prot.nOccurrs);
 
-			probs.put(prot.thisClass, corr*corr*corr);
-			corrSum += corr*corr*corr;
+				probs.put(prot.thisClass, corr*corr*corr);
+				corrSum += corr*corr*corr;
 
-			unknownCorr += (1 - corr) / nClasses;
+				unknownCorr += (1 - corr) / nClasses;
+			}
 		}
+		else{
+			for (Prototype prot : prototypes) {
+				// TODO: Stuff here
+				double corr1,corr2,corr3,corr;
+				double colorDistMedian = Utils.colorDistance(obj.color, 
+														prot.getRedQuantile(new Float(0.5)),
+														prot.getGreenQuantile(new Float(0.5)),
+														prot.getBlueQuantile(new Float(0.5)));
+				double sizeDistMedian = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.5))) / Utils.MAX_SIZE;
+				
+				double colorDistUpper = Utils.colorDistance(obj.color, 
+						prot.getRedQuantile(new Float(0.75)),
+						prot.getGreenQuantile(new Float(0.75)),
+						prot.getBlueQuantile(new Float(0.75)));
+				double sizeDistUpper = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.75))) / Utils.MAX_SIZE;
+				
+				double colorDistLower = Utils.colorDistance(obj.color, 
+						prot.getRedQuantile(new Float(0.25)),
+						prot.getGreenQuantile(new Float(0.25)),
+						prot.getBlueQuantile(new Float(0.25)));
+				double sizeDistLower = Math.abs(obj.size - prot.getSizeQuantile(new Float(0.25))) / Utils.MAX_SIZE;
+				
+				// Correlation and saturation
+				corr1 = 1 - (0.5 * colorDistMedian + 0.5 * sizeDistMedian);
+				corr1 = Utils.saturate(corr1, prot.nOccurrs);
+
+				corr2 = 1 - (0.5 * colorDistLower + 0.5 * sizeDistLower);
+				corr2 = Utils.saturate(corr2, prot.nOccurrs);
+
+				corr3 = 1 - (0.5 * colorDistUpper + 0.5 * sizeDistUpper);
+				corr3 = Utils.saturate(corr3, prot.nOccurrs);
+				
+				corr = (corr1+corr2+corr3)/3;
+				
+				Class[][] identifiedObjects = mapper.identifiedObjects;
+				int k=Math.min(prot.nOccurrs, 10);
+				if(nClasses>=2 && prot.nOccurrs>60){
+					double knnCor = Utils.getKNN(identifiedObjects,prot,mapper,env,k,obj);
+					//System.out.println("============");
+					//System.out.println(knnCor);
+					INTEREST_THRESHOLD = 45;
+					//corr = Math.max(1, knnCor*2);
+					corr = knnCor;
+				}
+				if(nClasses>2 && prot.nOccurrs>65){
+					INTEREST_THRESHOLD = 50;
+				}
+				if(nClasses>2 && prot.nOccurrs>70){
+					INTEREST_THRESHOLD = 55;
+				}
+				if(nClasses>2 && prot.nOccurrs>80){
+					INTEREST_THRESHOLD = 60;
+				}
+				if(nClasses>2 && prot.nOccurrs>90){
+					INTEREST_THRESHOLD = 65;
+				}
+				if(nClasses>2 && prot.nOccurrs>100){
+					INTEREST_THRESHOLD = 70;
+				}
+				if(nClasses>2 && prot.nOccurrs>110){
+					INTEREST_THRESHOLD = 75;
+				}
+				
+				probs.put(prot.thisClass, corr);
+				corrSum += corr;
+
+				unknownCorr += (1 - corr) / nClasses;
+				
+				if((obj.size > prot.getSizeQuantile(new Float(0.75)) || obj.size < prot.getSizeQuantile(new Float(0.25))) || 
+					((obj.color.getRed() > prot.getRedQuantile(new Float(0.75)) || obj.color.getRed() < prot.getRedQuantile(new Float(0.25))) &&
+					(obj.color.getGreen() > prot.getGreenQuantile(new Float(0.75)) || obj.color.getGreen() < prot.getGreenQuantile(new Float(0.25))) &&
+					(obj.color.getBlue() > prot.getBlueQuantile(new Float(0.75)) || obj.color.getBlue() < prot.getBlueQuantile(new Float(0.25))))  ){
+					outOfQuantile++;
+				}
+			}
+		}
+		
 
 		if (nClasses == 0)
 			unknownCorr = 1.0;
-		probs.put(SimObject.class, unknownCorr*unknownCorr*unknownCorr);
-		corrSum += unknownCorr*unknownCorr*unknownCorr;
+		if(outOfQuantile == nClasses && outOfQuantile>0){
+			unknownCorr = 1.0;
+		}
+			
+		probs.put(SimObject.class, unknownCorr);
+		corrSum += unknownCorr;
+		//System.out.println(env.identifyObject(obj.getLoc()));
 
 		for (Class c : probs.keySet()) {
 			
@@ -202,6 +293,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			//System.out.println(c.getSimpleName() + " : " + probs.get(c));
 		}
 
+		//System.out.println("============");
 		return probs;
 	}
 
