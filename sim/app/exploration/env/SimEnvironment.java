@@ -1,6 +1,11 @@
 package sim.app.exploration.env;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 
 import java.io.*;
@@ -11,6 +16,7 @@ import sim.field.grid.SparseGrid2D;
 import sim.util.Bag;
 import sim.util.Int2D;
 import sim.app.exploration.agents.*;
+import sim.app.exploration.agents.ExplorerAgentOriginal;
 import sim.app.exploration.objects.Bush;
 import sim.app.exploration.objects.House;
 import sim.app.exploration.objects.SimObject;
@@ -24,7 +30,16 @@ public class SimEnvironment implements Steppable{
 
 	private SparseGrid2D world;
 	
-	private Vector<ExplorerAgent> explorers;
+	List<String> ExplorerTypes = Arrays.asList(
+			"sim.app.exploration.agents.ExplorerAgentOriginal",
+			"sim.app.exploration.agents.ExplorerAgentExplorer"
+	);
+	List<Integer> ExplorerAmounts = Arrays.asList(
+			3,
+			1
+	);
+	
+	private Vector<ExplorerAgentParent> explorers;
 	private MapperAgent mapper;
 	private BrokerAgent broker;
 	private Class[][] occupied;
@@ -34,12 +49,21 @@ public class SimEnvironment implements Steppable{
 	
 	FileWriter writer;
 	
-	public SimEnvironment(SimState state, int width, int height, int nAgents){
-		
+	public SimEnvironment(SimState state, int width, int height){
+		System.out.println("SimEnvironment constructor");
+
 		this.world = new SparseGrid2D(width, height);
 		this.occupied = new Class[width][height];
 		
-		this.explorers = new Vector<ExplorerAgent>(nAgents);
+		int totalSumOfExplorers = 0;
+		for (int i = 0; i < this.ExplorerAmounts.size(); ++i) {
+			System.out.println("Adding " + this.ExplorerAmounts.get(i) + " explorers");
+			totalSumOfExplorers += this.ExplorerAmounts.get(i);
+		}
+
+		System.out.println("Total of " + totalSumOfExplorers + " explorers");
+
+		this.explorers = new Vector<ExplorerAgentParent>(totalSumOfExplorers);
 		this.mapper = new MapperAgent(width, height);
 		this.broker = new BrokerAgent();
 		                          
@@ -57,7 +81,8 @@ public class SimEnvironment implements Steppable{
 	 * it with them and with the explorer agents
 	 */
 	private void setup(SimState state){
-		
+		System.out.println("Starting setup");
+
 		addExplorersRandomly(state);
 		//addExplorersCornersCenter(state);	// This always adds 8 Explorers
 		
@@ -69,12 +94,19 @@ public class SimEnvironment implements Steppable{
 	/* Explorer Adding Methods */
 	
 	private void addExplorersRandomly(SimState state) {
-		for(int i= 0; i < explorers.capacity(); i++){
-			Int2D loc = new Int2D(state.random.nextInt(world.getWidth()),state.random.nextInt(world.getHeight()));
-			addExplorer(state, loc);
+		System.out.println("Adding explorers randomly");
+		for(int i= 0; i < ExplorerTypes.size(); i++){
+			String ExplorerType = ExplorerTypes.get(i);
+			int ExplorerAmount = ExplorerAmounts.get(i);
+			for(int k= 0; k < ExplorerAmount; k++){
+				Int2D loc = new Int2D(state.random.nextInt(world.getWidth()),state.random.nextInt(world.getHeight()));
+				System.out.println("Adding explorer " + ExplorerType);
+				addExplorer(state, loc, ExplorerType);			
+			}
 		}
 	}
 	
+	/*
 	private void addExplorersCornersCenter(SimState state) {
 		
 		// 4 Explorers in the center of the map
@@ -94,9 +126,25 @@ public class SimEnvironment implements Steppable{
 			addExplorer(state, l);
 		
 	}
+	*/
 	
-	private void addExplorer(SimState state, Int2D loc) {
-		ExplorerAgent explorer = new ExplorerAgent(loc);
+	private void addExplorer(SimState state, Int2D loc, String usedExplorerType) {
+	    Class<?> explorerType = null;
+	    Constructor<?> ctor = null;
+	    ExplorerAgentParent explorer = null;
+		System.out.println("Create explorer object");
+
+		try {
+			explorerType = Class.forName(usedExplorerType);
+			ctor = explorerType.getConstructor(Int2D.class);
+			Object explorerObj = ctor.newInstance(loc);
+			explorer = (ExplorerAgentParent) explorerObj;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Add explorer object");
+
 		explorers.add(explorer);
 		
 		mapper.updateLocation(explorer,loc);
@@ -104,11 +152,15 @@ public class SimEnvironment implements Steppable{
 		explorer.env = this;
 		explorer.mapper = mapper;
 		explorer.broker = broker;
+		System.out.println("Explorer object added");
+
 	}
 	
 	/* Map Generation Methods */
 	
 	private void buildRandomMap(SimState state) {
+		System.out.println("Build map");
+
 		Class classes[] = {Wall.class, Tree.class, Bush.class, Water.class, House.class};
 		int numberOfInstances[] = {400, 200, 200, 100, 20};
 		Int2D loc;
@@ -268,7 +320,7 @@ public class SimEnvironment implements Steppable{
 		/*
 		 * Step over all the explorers in the environment, making them step
 		 */
-		for(ExplorerAgent agent : explorers){
+		for(ExplorerAgentParent agent : explorers){
 			agent.step(state);
 		}
 		
@@ -315,13 +367,13 @@ public class SimEnvironment implements Steppable{
 		return broker;
 	}
 
-	public Bag getVisibleObejcts(int x, int y, int viewRange) {
+	public Bag getVisibleObjects(int x, int y, int viewRange) {
 		
 		Bag all = world.getNeighborsHamiltonianDistance(x, y, viewRange, false, null, null, null);
 		Bag visible = new Bag();
 		
 		for(Object b: all){
-			if(b instanceof ExplorerAgent) continue;
+			if(b instanceof ExplorerAgentParent) continue;
 			
 			SimObject o = (SimObject) b;
 			visible.add(new SimObject(o));
@@ -339,14 +391,14 @@ public class SimEnvironment implements Steppable{
 			return null;
 		}
 		
-		while((here.get(i) instanceof ExplorerAgent) && i<here.numObjs) i++;
+		while((here.get(i) instanceof ExplorerAgentParent) && i<here.numObjs) i++;
 		
 		SimObject real = (SimObject) here.get(i);
 		
 		return real;
 	}
 
-	public void updateLocation(ExplorerAgent agent, Int2D loc) {
+	public void updateLocation(ExplorerAgentParent agent, Int2D loc) {
 		
 		world.setObjectLocation(agent, loc);	
 	}

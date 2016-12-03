@@ -12,28 +12,28 @@ import sim.util.Bag;
 import sim.util.Double2D;
 import sim.util.Int2D;
 
-public class ExplorerAgent implements sim.portrayal.Oriented2D {
-
-	private static final long serialVersionUID = 1L;
-	private float INTEREST_THRESHOLD = 65;
-	private final double STEP = Math.sqrt(2);
-	private final int viewRange = 40;
+public class ExplorerAgentExplorer extends ExplorerAgentParent {
 	
-	private int identifyClock;
+	// protected static final long serialVersionUID = 1L;
+	protected float INTEREST_THRESHOLD = 65;
+	// protected final double STEP = Math.sqrt(2);
+	protected final int viewRange = 60;
+	
+	// protected int identifyClock;
 
-	private Int2D loc;
-	private Int2D target;
-	private double orientation;
+	// protected Int2D loc;
+	// protected Int2D target;
+	// protected double orientation;
 
-	public SimEnvironment env;
-	public BrokerAgent broker;
-	public MapperAgent mapper;
-	private Vector<Prototype> knownObjects;
+	// public SimEnvironment env;
+	// public BrokerAgent broker;
+	// public MapperAgent mapper;
+	// protected Vector<Prototype> knownObjects;
 
-	private boolean GLOBAL_KNOWLEDGE = true;
-	private int IDENTIFY_TIME = 15;
-
-	public ExplorerAgent(Int2D loc) {
+	// protected boolean GLOBAL_KNOWLEDGE = true;
+	// protected int IDENTIFY_TIME = 15;
+	
+	public ExplorerAgentExplorer(Int2D loc) {
 		this.loc = loc;
 		this.orientation = 0;
 		this.target = null;
@@ -46,7 +46,7 @@ public class ExplorerAgent implements sim.portrayal.Oriented2D {
 		// The explorer sees the neighboring objects and sends them to the
 		// mapper
 		if (identifyClock == 0) {
-			Bag visible = env.getVisibleObejcts(loc.x, loc.y, viewRange);
+			Bag visible = env.getVisibleObjects(loc.x, loc.y, viewRange);
 
 			// -------------------------------------------------------------
 			for (int i = 1; i < visible.size(); i++) {

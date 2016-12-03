@@ -5,14 +5,13 @@ import java.util.Hashtable;
 import java.util.Random;
 import java.util.Vector;
 
-import sim.app.exploration.agents.ExplorerAgent;
+import sim.app.exploration.agents.ExplorerAgentParent;
 import sim.app.exploration.objects.SimObject;
 
 public class Utils {
 
 	public static final double MAX_SIZE = 10.0;
 	public static final double COLOR_DIST = (100*100)*3;
-	
 	
 	public static double interestFunction(double prob){
 		double interest;
@@ -42,7 +41,7 @@ public class Utils {
 		return corr;
 	}
 	
-	public static double getDistance(ExplorerAgent agent, SimObject obj){
+	public static double getDistance(ExplorerAgentParent agent, SimObject obj){
 		double d;
 		
 		if(obj == null){

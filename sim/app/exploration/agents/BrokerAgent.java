@@ -21,7 +21,7 @@ public class BrokerAgent {
 		
 		// If we have no points of interest, return a random point
 		if (pointsOfInterest.size() == 0)
-			return getLimitedRandomTarget(agentPos);
+			return getRandomTarget();
 			//return getRandomTarget();
 		
 		// Else, find the best point of Interest

@@ -3,7 +3,7 @@ package sim.app.exploration.core;
 import java.awt.Color;
 import javax.swing.JFrame;
 
-import sim.app.exploration.agents.ExplorerAgent;
+import sim.app.exploration.agents.*;
 import sim.app.exploration.objects.Bush;
 import sim.app.exploration.objects.House;
 import sim.app.exploration.objects.SimObject;
@@ -76,8 +76,13 @@ public class Viewer extends GUIState{
 	    }
 	    
 	    knownWorld.setPortrayalForClass(
-	        ExplorerAgent.class, new OrientedPortrayal2D(new SimplePortrayal2D(),0,2.0,
-	                Color.blue,
+		        ExplorerAgentOriginal.class, new OrientedPortrayal2D(new SimplePortrayal2D(),0,3,
+		                Color.red,
+		                OrientedPortrayal2D.SHAPE_COMPASS) );
+	    
+	    knownWorld.setPortrayalForClass(
+	        ExplorerAgentExplorer.class, new OrientedPortrayal2D(new SimplePortrayal2D(),0,3,
+	                Color.green,
 	                OrientedPortrayal2D.SHAPE_COMPASS) );
 	    
 	    // reschedule the displayer

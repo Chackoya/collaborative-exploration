@@ -41,7 +41,7 @@ public class MapperAgent {
 	}
 
 
-	public void updateLocation(ExplorerAgent agent, Int2D loc) {
+	public void updateLocation(ExplorerAgentParent agent, Int2D loc) {
 		
 		knownWorld.setObjectLocation(agent,loc);
 		
@@ -90,7 +90,7 @@ public class MapperAgent {
 			Bag here = new Bag(temp);
 			
 			for(Object o : here){
-				if(! (o instanceof ExplorerAgent) ){
+				if(! (o instanceof ExplorerAgentParent) ){
 					knownWorld.remove(o);
 				}
 			}
