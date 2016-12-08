@@ -16,7 +16,7 @@ import sim.util.WordWrap;
 public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
 	protected static final long serialVersionUID = 1L;
-	protected float INTEREST_THRESHOLD = 65;
+	protected float INTEREST_THRESHOLD = 35;
 	protected final double STEP = Math.sqrt(2);
 	protected final int viewRange = 40;
 
@@ -160,7 +160,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
 	}
 
-	private Hashtable<Class, Double> getProbabilityDist(SimObject obj) {
+	protected Hashtable<Class, Double> getProbabilityDist(SimObject obj) {
 
 		Hashtable<Class, Double> probs = new Hashtable<Class, Double>();
 
@@ -243,22 +243,22 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 					//corr = Math.max(1, knnCor*2);
 					corr = knnCor;
 				}
-				if(nClasses>2 && prot.nOccurrs>65){
+				if(nClasses>=2 && prot.nOccurrs>65){
 					INTEREST_THRESHOLD = 50;
 				}
-				if(nClasses>2 && prot.nOccurrs>70){
+				if(nClasses>=2 && prot.nOccurrs>70){
 					INTEREST_THRESHOLD = 55;
 				}
-				if(nClasses>2 && prot.nOccurrs>80){
+				if(nClasses>=2 && prot.nOccurrs>80){
 					INTEREST_THRESHOLD = 60;
 				}
-				if(nClasses>2 && prot.nOccurrs>90){
+				if(nClasses>=2 && prot.nOccurrs>90){
 					INTEREST_THRESHOLD = 65;
 				}
-				if(nClasses>2 && prot.nOccurrs>100){
+				if(nClasses>=2 && prot.nOccurrs>100){
 					INTEREST_THRESHOLD = 70;
 				}
-				if(nClasses>2 && prot.nOccurrs>110){
+				if(nClasses>=2 && prot.nOccurrs>110){
 					INTEREST_THRESHOLD = 75;
 				}
 				

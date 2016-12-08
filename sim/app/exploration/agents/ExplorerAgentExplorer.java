@@ -15,9 +15,9 @@ import sim.util.Int2D;
 public class ExplorerAgentExplorer extends ExplorerAgentParent {
 	
 	// protected static final long serialVersionUID = 1L;
-	protected float INTEREST_THRESHOLD = 65;
+	//protected float INTEREST_THRESHOLD = 0;
 	// protected final double STEP = Math.sqrt(2);
-	protected final int viewRange = 60;
+	protected final int viewRange = 30;
 	
 	// protected int identifyClock;
 
@@ -164,53 +164,6 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 			this.knownObjects.add(new Prototype(class1, obj.size, obj.color));
 		}
 
-	}
-
-	private Hashtable<Class, Double> getProbabilityDist(SimObject obj) {
-
-		Hashtable<Class, Double> probs = new Hashtable<Class, Double>();
-
-		// TODO: Implement global knowledge
-
-		Vector<Prototype> prototypes;
-		if (GLOBAL_KNOWLEDGE) {
-			prototypes = mapper.knownObjects;
-		} else {
-			prototypes = this.knownObjects;
-		}
-		int nClasses = prototypes.size();
-		double unknownCorr = 0;
-		double corrSum = 0;
-
-		for (Prototype prot : prototypes) {
-			// TODO: Stuff here
-			double corr;
-			double colorDist = Utils.colorDistance(obj.color, prot.color);
-			double sizeDist = Math.abs(obj.size - prot.size) / Utils.MAX_SIZE;
-
-			// Correlation
-			corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
-			// Saturation
-			corr = Utils.saturate(corr, prot.nOccurrs);
-
-			probs.put(prot.thisClass, corr*corr*corr);
-			corrSum += corr*corr*corr;
-
-			unknownCorr += (1 - corr) / nClasses;
-		}
-
-		if (nClasses == 0)
-			unknownCorr = 1.0;
-		probs.put(SimObject.class, unknownCorr*unknownCorr*unknownCorr);
-		corrSum += unknownCorr*unknownCorr*unknownCorr;
-
-		for (Class c : probs.keySet()) {
-			
-			probs.put(c, probs.get(c) / corrSum);
-			//System.out.println(c.getSimpleName() + " : " + probs.get(c));
-		}
-
-		return probs;
 	}
 
 	@Override
