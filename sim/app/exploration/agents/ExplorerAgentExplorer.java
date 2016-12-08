@@ -53,7 +53,7 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 			prob.add(probs.get(c));
 		}
 
-		entropyInterest = Utils.entropy(prob);
+		entropyInterest = Utils.entropy2(prob,probs.size());
 
 		//System.out.println("ENTROPY: " + entropyInterest + " | UNKNOWN: "
 		//		+ unknownInterest);

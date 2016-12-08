@@ -198,7 +198,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				// Correlation
 				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
 				// Saturation
-				corr = Utils.saturateNew(corr, prot.nOccurrs);
+				corr = Utils.saturate(corr, prot.nOccurrs);
 
 				probs.put(prot.thisClass, corr*corr*corr);
 				corrSum += corr*corr*corr;
