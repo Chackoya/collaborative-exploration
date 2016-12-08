@@ -35,8 +35,8 @@ public class SimEnvironment implements Steppable{
 			"sim.app.exploration.agents.ExplorerAgentExplorer"
 	);
 	List<Integer> ExplorerAmounts = Arrays.asList(
-			2,
-			2
+			5,
+			5
 	);
 	
 	private Vector<ExplorerAgentParent> explorers;
@@ -152,7 +152,11 @@ public class SimEnvironment implements Steppable{
 		explorer.env = this;
 		explorer.mapper = mapper;
 		explorer.broker = broker;
-		System.out.println("Explorer object added");
+		explorer.INTEREST_THRESHOLD_INITIAL = (Math.max(35, 55-(Math.sqrt(getExplorerAmount()))*5));
+		explorer.INTEREST_THRESHOLD = explorer.INTEREST_THRESHOLD_INITIAL;
+		explorer.KNN_START = 60-(3-Math.min(3,Math.log(getExplorerAmount())*getExplorerAmount()))*5;
+		explorer.INTEREST_THRESHOLD_STEPS = 40+Math.sqrt(getExplorerAmount())*5;
+		System.out.println("Explorer object added with interest threshold "+explorer.INTEREST_THRESHOLD);
 
 	}
 	
@@ -404,6 +408,15 @@ public class SimEnvironment implements Steppable{
 	public void updateLocation(ExplorerAgentParent agent, Int2D loc) {
 		
 		world.setObjectLocation(agent, loc);	
+	}
+	
+	private int getExplorerAmount(){
+		int res = 0;
+		for(int n : ExplorerAmounts){
+			res += n;
+		}
+		
+		return res;
 	}
 
 }

@@ -34,7 +34,7 @@ public class Utils {
 		double interest;
 		
 		// 6 - making interest for unknown bigger - unknown objects provide useful information about new classes and are likely to be miss-classified
-		interest = Math.min(1, Math.tanh(6*prob));
+		interest = Math.min(1, Math.tanh(4*prob));
 		
 		return interest;
 	}

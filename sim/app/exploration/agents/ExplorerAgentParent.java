@@ -16,10 +16,8 @@ import sim.util.WordWrap;
 public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
 	protected static final long serialVersionUID = 1L;
-	protected float INTEREST_THRESHOLD = 35;
 	protected final double STEP = Math.sqrt(2);
 	protected final int viewRange = 40;
-
 	
 	protected int identifyClock;
 
@@ -31,6 +29,12 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 	public BrokerAgent broker;
 	public MapperAgent mapper;
 	protected Vector<Prototype> knownObjects;
+	
+	public final double INTEREST_THRESHOLD_MAX = 80;
+	public double INTEREST_THRESHOLD_STEPS;
+	public double KNN_START;
+	public double INTEREST_THRESHOLD_INITIAL;
+	public double INTEREST_THRESHOLD;
 
 	protected boolean GLOBAL_KNOWLEDGE = true;
 	protected int IDENTIFY_TIME = 15;
@@ -238,34 +242,16 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				
 				Class[][] identifiedObjects = mapper.identifiedObjects;
 				int k=Math.min(prot.nOccurrs, 10);
-				if(nClasses>=2 && prot.nOccurrs>60){
+				if(nClasses>=2 && prot.nOccurrs>KNN_START){
 					double knnCor = Utils.getKNN(identifiedObjects,prot,mapper,env,k,obj);
-					//System.out.println("============");
-					//System.out.println(knnCor);
-					INTEREST_THRESHOLD = 45;
 
-					if(weighted)
+					INTEREST_THRESHOLD = Math.min(INTEREST_THRESHOLD_MAX, 
+							INTEREST_THRESHOLD_INITIAL+((INTEREST_THRESHOLD_MAX - INTEREST_THRESHOLD_INITIAL)/INTEREST_THRESHOLD_STEPS)*(prot.nOccurrs-KNN_START));
+					
+					if(weighted && prot.nOccurrs>= KNN_START && prot.nOccurrs<= (KNN_START+INTEREST_THRESHOLD_STEPS/2))
 						corr = 0.9*knnCor + 0.1*corr;
 					else
 						corr = knnCor;
-				}
-				if(nClasses>=2 && prot.nOccurrs>65){
-					INTEREST_THRESHOLD = 50;
-				}
-				if(nClasses>=2 && prot.nOccurrs>70){
-					INTEREST_THRESHOLD = 55;
-				}
-				if(nClasses>=2 && prot.nOccurrs>80){
-					INTEREST_THRESHOLD = 60;
-				}
-				if(nClasses>=2 && prot.nOccurrs>90){
-					INTEREST_THRESHOLD = 65;
-				}
-				if(nClasses>=2 && prot.nOccurrs>100){
-					INTEREST_THRESHOLD = 70;
-				}
-				if(nClasses>=2 && prot.nOccurrs>110){
-					INTEREST_THRESHOLD = 75;
 				}
 				
 				probs.put(prot.thisClass, corr);
