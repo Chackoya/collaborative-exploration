@@ -35,8 +35,8 @@ public class SimEnvironment implements Steppable{
 			"sim.app.exploration.agents.ExplorerAgentExplorer"
 	);
 	List<Integer> ExplorerAmounts = Arrays.asList(
-			0,
-			10
+			5,
+			5
 	);
 	
 	private Vector<ExplorerAgentParent> explorers;
@@ -86,9 +86,9 @@ public class SimEnvironment implements Steppable{
 		addExplorersRandomly(state);
 		//addExplorersCornersCenter(state);	// This always adds 8 Explorers
 		
-		buildRandomMap(state);
+		//buildRandomMap(state);
 		//buildDonutMap(state);
-		//buildStructuredMap(state);
+		buildStructuredMap(state);
 	}
 	
 	/* Explorer Adding Methods */

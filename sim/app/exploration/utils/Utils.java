@@ -75,14 +75,6 @@ public class Utils {
 		return corr;
 	}
 	
-	public static double saturateNew(double corr, int nOcurrs){
-		double sat = (Math.tanh( (nOcurrs-15)/5.0 ) + 1.0 )/2;
-		//saturates slower
-		corr = corr*sat;
-		
-		return corr;
-	}
-	
 	public static double getDistance(ExplorerAgentParent agent, SimObject obj){
 		double d;
 		

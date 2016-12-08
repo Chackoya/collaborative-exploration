@@ -230,13 +230,13 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				
 				// Correlation and saturation
 				corr1 = 1 - (0.5 * colorDistMedian + 0.5 * sizeDistMedian);
-				corr1 = Utils.saturateNew(corr1, prot.nOccurrs);
+				corr1 = Utils.saturate(corr1, prot.nOccurrs);
 
 				corr2 = 1 - (0.5 * colorDistLower + 0.5 * sizeDistLower);
-				corr2 = Utils.saturateNew(corr2, prot.nOccurrs);
+				corr2 = Utils.saturate(corr2, prot.nOccurrs);
 
 				corr3 = 1 - (0.5 * colorDistUpper + 0.5 * sizeDistUpper);
-				corr3 = Utils.saturateNew(corr3, prot.nOccurrs);
+				corr3 = Utils.saturate(corr3, prot.nOccurrs);
 				
 				corr = (corr1+corr2+corr3)/3;
 				
