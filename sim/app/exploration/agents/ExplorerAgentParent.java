@@ -31,7 +31,8 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 	public BrokerAgent broker;
 	public MapperAgent mapper;
 	protected Vector<Prototype> knownObjects;
-
+	protected int agentId;
+	
 	protected boolean GLOBAL_KNOWLEDGE = true;
 	protected int IDENTIFY_TIME = 15;
 
@@ -94,7 +95,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			// If the explorer has no target, he has to request a new one from
 			// the broker
 			if (target == null) {
-				target = broker.requestTarget(loc);
+				target = broker.requestTarget(loc, agentId);
 				//System.out.println("NEW TARGET: X: " + target.x + " Y: "
 				//		+ target.y);
 			}
@@ -116,7 +117,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			identifyClock--;
 	}
 
-	private int getObjectInterest(Hashtable<Class, Double> probs) {
+	protected int getObjectInterest(Hashtable<Class, Double> probs) {
 		double unknownInterest = 0;
 		double entropyInterest;
 		Vector<Double> prob = new Vector<Double>();
@@ -138,7 +139,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 		return (int) Math.round(interest);
 	}
 
-	private void addPrototype(SimObject obj, Class class1) {
+	protected void addPrototype(SimObject obj, Class class1) {
 		// TODO Auto-generated method stub
 
 		// Using the global team knowledge
@@ -160,7 +161,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
 	}
 
-	private Hashtable<Class, Double> getProbabilityDist(SimObject obj) {
+	protected Hashtable<Class, Double> getProbabilityDist(SimObject obj) {
 
 		Hashtable<Class, Double> probs = new Hashtable<Class, Double>();
 

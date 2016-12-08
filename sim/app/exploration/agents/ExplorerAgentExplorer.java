@@ -14,31 +14,20 @@ import sim.util.Int2D;
 
 public class ExplorerAgentExplorer extends ExplorerAgentParent {
 	
-	// protected static final long serialVersionUID = 1L;
 	protected float INTEREST_THRESHOLD = 65;
-	// protected final double STEP = Math.sqrt(2);
-	protected final int viewRange = 60;
-	
-	// protected int identifyClock;
-
-	// protected Int2D loc;
-	// protected Int2D target;
-	// protected double orientation;
-
-	// public SimEnvironment env;
-	// public BrokerAgent broker;
-	// public MapperAgent mapper;
-	// protected Vector<Prototype> knownObjects;
+	protected final int viewRange = 30;
 
 	// protected boolean GLOBAL_KNOWLEDGE = true;
 	// protected int IDENTIFY_TIME = 15;
 	
-	public ExplorerAgentExplorer(Int2D loc) {
+	
+	public ExplorerAgentExplorer(Int2D loc, int agentId) {
 		this.loc = loc;
 		this.orientation = 0;
 		this.target = null;
 		this.knownObjects = new Vector<Prototype>();
 		this.identifyClock = 0;
+		this.agentId = agentId;
 	}
 
 	public void step(SimState state) {
@@ -100,7 +89,7 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 			// If the explorer has no target, he has to request a new one from
 			// the broker
 			if (target == null) {
-				target = broker.requestTarget(loc);
+				target = broker.requestTarget(loc, agentId);
 				//System.out.println("NEW TARGET: X: " + target.x + " Y: "
 				//		+ target.y);
 			}
@@ -120,97 +109,6 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 		
 		if (identifyClock > 0)
 			identifyClock--;
-	}
-
-	private int getObjectInterest(Hashtable<Class, Double> probs) {
-		double unknownInterest = 0;
-		double entropyInterest;
-		Vector<Double> prob = new Vector<Double>();
-
-		for (Class c : probs.keySet()) {
-			if (c == SimObject.class)
-				unknownInterest = Utils.interestFunction(probs.get(c));
-
-			prob.add(probs.get(c));
-		}
-
-		entropyInterest = Utils.entropy(prob);
-
-		//System.out.println("ENTROPY: " + entropyInterest + " | UNKNOWN: "
-		//		+ unknownInterest);
-
-		double interest = (entropyInterest > unknownInterest ? entropyInterest : unknownInterest) * 100;
-
-		return (int) Math.round(interest);
-	}
-
-	private void addPrototype(SimObject obj, Class class1) {
-		// TODO Auto-generated method stub
-
-		// Using the global team knowledge
-		if (GLOBAL_KNOWLEDGE) {
-
-			mapper.addPrototype(obj, class1);
-
-			// Using only the agent's knowledge
-		} else {
-			for (Prototype p : this.knownObjects) {
-				if (class1 == p.thisClass) {
-					p.addOccurrence(obj.size, obj.color);
-					return;
-				}
-			}
-
-			this.knownObjects.add(new Prototype(class1, obj.size, obj.color));
-		}
-
-	}
-
-	private Hashtable<Class, Double> getProbabilityDist(SimObject obj) {
-
-		Hashtable<Class, Double> probs = new Hashtable<Class, Double>();
-
-		// TODO: Implement global knowledge
-
-		Vector<Prototype> prototypes;
-		if (GLOBAL_KNOWLEDGE) {
-			prototypes = mapper.knownObjects;
-		} else {
-			prototypes = this.knownObjects;
-		}
-		int nClasses = prototypes.size();
-		double unknownCorr = 0;
-		double corrSum = 0;
-
-		for (Prototype prot : prototypes) {
-			// TODO: Stuff here
-			double corr;
-			double colorDist = Utils.colorDistance(obj.color, prot.color);
-			double sizeDist = Math.abs(obj.size - prot.size) / Utils.MAX_SIZE;
-
-			// Correlation
-			corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
-			// Saturation
-			corr = Utils.saturate(corr, prot.nOccurrs);
-
-			probs.put(prot.thisClass, corr*corr*corr);
-			corrSum += corr*corr*corr;
-
-			unknownCorr += (1 - corr) / nClasses;
-		}
-
-		if (nClasses == 0)
-			unknownCorr = 1.0;
-		probs.put(SimObject.class, unknownCorr*unknownCorr*unknownCorr);
-		corrSum += unknownCorr*unknownCorr*unknownCorr;
-
-		for (Class c : probs.keySet()) {
-			
-			probs.put(c, probs.get(c) / corrSum);
-			//System.out.println(c.getSimpleName() + " : " + probs.get(c));
-		}
-
-		return probs;
 	}
 
 	@Override
