@@ -35,8 +35,8 @@ public class SimEnvironment implements Steppable{
 			"sim.app.exploration.agents.ExplorerAgentExplorer"
 	);
 	List<Integer> ExplorerAmounts = Arrays.asList(
-			5,
-			5
+			2,
+			2
 	);
 	
 	private Vector<ExplorerAgentParent> explorers;
@@ -316,7 +316,7 @@ public class SimEnvironment implements Steppable{
 		if( step%stepCheckpoint == 0 ){
 			printStats();
 		}
-		if(step%500 == 0){
+		if(step%250 == 0){
 			System.gc();
 		}
 		

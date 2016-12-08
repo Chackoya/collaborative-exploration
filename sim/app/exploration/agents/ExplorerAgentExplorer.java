@@ -48,7 +48,7 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 
 		for (Class c : probs.keySet()) {
 			if (c == SimObject.class)
-				unknownInterest = Utils.interestFunction(probs.get(c));
+				unknownInterest = Utils.interestFunctionNew(probs.get(c));
 
 			prob.add(probs.get(c));
 		}

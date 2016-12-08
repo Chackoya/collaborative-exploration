@@ -128,7 +128,8 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			prob.add(probs.get(c));
 		}
 
-		entropyInterest = Utils.entropy(prob);
+		//entropyInterest = Utils.entropy(prob);
+		entropyInterest = Utils.entropy2(prob,probs.size());
 
 		//System.out.println("ENTROPY: " + entropyInterest + " | UNKNOWN: "
 		//		+ unknownInterest);
@@ -179,9 +180,11 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 		
 		//change setup
 		Boolean oldCorrelation = false;
+		Boolean weighted = false;
 		int outOfQuantile = 0;
 		
 		if(oldCorrelation){
+			INTEREST_THRESHOLD = 65;
 			for (Prototype prot : prototypes) {
 				// TODO: Stuff here
 				double corr;
@@ -191,7 +194,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				// Correlation
 				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
 				// Saturation
-				corr = Utils.saturate(corr, prot.nOccurrs);
+				corr = Utils.saturateNew(corr, prot.nOccurrs);
 
 				probs.put(prot.thisClass, corr*corr*corr);
 				corrSum += corr*corr*corr;
@@ -223,13 +226,13 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				
 				// Correlation and saturation
 				corr1 = 1 - (0.5 * colorDistMedian + 0.5 * sizeDistMedian);
-				corr1 = Utils.saturate(corr1, prot.nOccurrs);
+				corr1 = Utils.saturateNew(corr1, prot.nOccurrs);
 
 				corr2 = 1 - (0.5 * colorDistLower + 0.5 * sizeDistLower);
-				corr2 = Utils.saturate(corr2, prot.nOccurrs);
+				corr2 = Utils.saturateNew(corr2, prot.nOccurrs);
 
 				corr3 = 1 - (0.5 * colorDistUpper + 0.5 * sizeDistUpper);
-				corr3 = Utils.saturate(corr3, prot.nOccurrs);
+				corr3 = Utils.saturateNew(corr3, prot.nOccurrs);
 				
 				corr = (corr1+corr2+corr3)/3;
 				
@@ -240,8 +243,11 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 					//System.out.println("============");
 					//System.out.println(knnCor);
 					INTEREST_THRESHOLD = 45;
-					//corr = Math.max(1, knnCor*2);
-					corr = knnCor;
+
+					if(weighted)
+						corr = 0.9*knnCor + 0.1*corr;
+					else
+						corr = knnCor;
 				}
 				if(nClasses>=2 && prot.nOccurrs>65){
 					INTEREST_THRESHOLD = 50;

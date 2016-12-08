@@ -1,6 +1,7 @@
 package sim.app.exploration.utils;
 
 import java.awt.Color;
+import java.sql.NClob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -29,6 +30,15 @@ public class Utils {
 		return interest;
 	}
 	
+	public static double interestFunctionNew(double prob){
+		double interest;
+		
+		// 6 - making interest for unknown bigger - unknown objects provide useful information about new classes and are likely to be miss-classified
+		interest = Math.min(1, Math.tanh(6*prob));
+		
+		return interest;
+	}
+	
 	public static double entropy(Vector<Double> probs){
 		double e = 0;
 		
@@ -40,10 +50,34 @@ public class Utils {
 		return -e;
 	}
 	
+	public static double entropy2(Vector<Double> probs, int nClasses){
+		//is decreased when one class is really large
+		double e = 0;
+		
+		double max = 0;
+		
+		for(double prob : probs){
+			if (prob==0) prob = 0.0001;
+			e += prob * Math.log10(prob);
+			if(prob > max)
+				max = prob;
+		}
+		
+		e *= (1-Math.pow((max-(1/nClasses)), 2)/nClasses); 
+		
+		return -e;
+	}
+	
 	public static double saturate(double corr, int nOcurrs){
 		double sat = (Math.tanh( (nOcurrs-5)/2.0 ) + 1.0 )/2;
-		//new idea
-		//double sat = (Math.tanh( (Math.log(nOcurrs)-5)/2.0 ) + 1.0 );
+		corr = corr*sat;
+		
+		return corr;
+	}
+	
+	public static double saturateNew(double corr, int nOcurrs){
+		double sat = (Math.tanh( (nOcurrs-15)/5.0 ) + 1.0 )/2;
+		//saturates slower
 		corr = corr*sat;
 		
 		return corr;
