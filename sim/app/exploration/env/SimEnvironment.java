@@ -316,6 +316,9 @@ public class SimEnvironment implements Steppable{
 		if( step%stepCheckpoint == 0 ){
 			printStats();
 		}
+		if(step%500 == 0){
+			System.gc();
+		}
 		
 		/*
 		 * Step over all the explorers in the environment, making them step
