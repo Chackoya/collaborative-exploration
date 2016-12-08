@@ -116,7 +116,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			identifyClock--;
 	}
 
-	private int getObjectInterest(Hashtable<Class, Double> probs) {
+	protected int getObjectInterest(Hashtable<Class, Double> probs) {
 		double unknownInterest = 0;
 		double entropyInterest;
 		Vector<Double> prob = new Vector<Double>();
@@ -138,7 +138,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 		return (int) Math.round(interest);
 	}
 
-	private void addPrototype(SimObject obj, Class class1) {
+	protected void addPrototype(SimObject obj, Class class1) {
 		// TODO Auto-generated method stub
 
 		// Using the global team knowledge
