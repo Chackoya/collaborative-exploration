@@ -63,7 +63,7 @@ public class Utils {
 				max = prob;
 		}
 		
-		e *= (1-Math.pow((max-(1/nClasses)), 2)/nClasses); 
+		e *= (1-Math.pow((max-(1/nClasses)), 2)); 
 		
 		return -e;
 	}
