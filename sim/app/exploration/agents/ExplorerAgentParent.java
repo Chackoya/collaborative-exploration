@@ -29,6 +29,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 	public BrokerAgent broker;
 	public MapperAgent mapper;
 	protected Vector<Prototype> knownObjects;
+	protected int agentId;
 	
 	public final double INTEREST_THRESHOLD_MAX = 80;
 	public double INTEREST_THRESHOLD_STEPS;
@@ -98,7 +99,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			// If the explorer has no target, he has to request a new one from
 			// the broker
 			if (target == null) {
-				target = broker.requestTarget(loc);
+				target = broker.requestTarget(loc, agentId);
 				//System.out.println("NEW TARGET: X: " + target.x + " Y: "
 				//		+ target.y);
 			}

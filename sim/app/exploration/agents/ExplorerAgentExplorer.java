@@ -14,10 +14,11 @@ import sim.util.Int2D;
 
 public class ExplorerAgentExplorer extends ExplorerAgentParent {
 	
+
 	// protected static final long serialVersionUID = 1L;
 	//protected float INTEREST_THRESHOLD = 0;
 	// protected final double STEP = Math.sqrt(2);
-	protected final int viewRange = 30;
+	protected final int viewRange = 40;
 	
 	// protected int identifyClock;
 
@@ -33,13 +34,16 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 	// protected boolean GLOBAL_KNOWLEDGE = true;
 	// protected int IDENTIFY_TIME = 15;
 	
-	public ExplorerAgentExplorer(Int2D loc) {
+	
+	public ExplorerAgentExplorer(Int2D loc, int agentId) {
 		this.loc = loc;
 		this.orientation = 0;
 		this.target = null;
 		this.knownObjects = new Vector<Prototype>();
 		this.identifyClock = 0;
+		this.agentId = agentId;
 	}
+
 
 	protected int getObjectInterest(Hashtable<Class, Double> probs) {
 		double unknownInterest = 0;

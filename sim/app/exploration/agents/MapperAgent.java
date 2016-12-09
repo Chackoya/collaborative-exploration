@@ -30,7 +30,8 @@ public class MapperAgent {
 	 * @param visible
 	 */
 	public void addVisibleObjects(Bag visible) {
-		
+		System.out.println("AddVisibleObjects");
+
 		for(Object o : visible){
 			// If the object is not known to the world
 			if(knownWorld.getObjectLocation(o) == null){
@@ -42,20 +43,16 @@ public class MapperAgent {
 		}
 	}
 
-
 	public void updateLocation(ExplorerAgentParent agent, Int2D loc) {
 		
 		knownWorld.setObjectLocation(agent,loc);
-		
 	}
 
-	
 	public boolean isIdentified(Int2D loc) {
 		
 		return identifiedObjects[loc.x][loc.y] != null;
 	}
 
-	
 	public void identify(SimObject obj, Class highest) {
 		
 		//System.out.println("IDENTIFYING OBJ AT (" + obj.loc.x + "," + obj.loc.y + ") AS " + highest.getName());
@@ -114,5 +111,4 @@ public class MapperAgent {
 		this.knownObjects.add(new Prototype(class1, obj.size, obj.color));
 		
 	}
-
 }

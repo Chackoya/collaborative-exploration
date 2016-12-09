@@ -14,33 +14,21 @@ import sim.util.Int2D;
 
 public class ExplorerAgentOriginal extends ExplorerAgentParent {
 	
+
 	// protected static final long serialVersionUID = 1L;
 	//protected float INTEREST_THRESHOLD = 75;
 	// protected final double STEP = Math.sqrt(2);
-	protected final int viewRange = 30;
-	
-	// protected int identifyClock;
-
-	// protected Int2D loc;
-	// protected Int2D target;
-	// protected double orientation;
-
-	// public SimEnvironment env;
-	// public BrokerAgent broker;
-	// public MapperAgent mapper;
-	// protected Vector<Prototype> knownObjects;
+	protected final int viewRange = 40;
 
 	// protected boolean GLOBAL_KNOWLEDGE = true;
-	// protected int IDENTIFY_TIME = 30;
+	// protected int IDENTIFY_TIME = 15;
 	
-	public ExplorerAgentOriginal(Int2D loc) {
+	public ExplorerAgentOriginal(Int2D loc, int agentId) {
 		this.loc = loc;
 		this.orientation = 0;
 		this.target = null;
 		this.knownObjects = new Vector<Prototype>();
 		this.identifyClock = 0;
+		this.agentId = agentId;
 	}
-
-
-
 }
