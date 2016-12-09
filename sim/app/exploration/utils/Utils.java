@@ -1,6 +1,7 @@
 package sim.app.exploration.utils;
 
 import java.awt.Color;
+import java.sql.NClob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -29,6 +30,15 @@ public class Utils {
 		return interest;
 	}
 	
+	public static double interestFunctionNew(double prob){
+		double interest;
+		
+		// 6 - making interest for unknown bigger - unknown objects provide useful information about new classes and are likely to be miss-classified
+		interest = Math.min(1, Math.tanh(4*prob));
+		
+		return interest;
+	}
+	
 	public static double entropy(Vector<Double> probs){
 		double e = 0;
 		
@@ -40,10 +50,34 @@ public class Utils {
 		return -e;
 	}
 	
+	public static double entropy2(Vector<Double> probs, int nClasses){
+		//is decreased when one class is really large
+		double e = 0;
+		
+		double max = 0;
+		
+		for(double prob : probs){
+			if (prob==0) prob = 0.0001;
+			e += prob * Math.log10(prob);
+			if(prob > max)
+				max = prob;
+		}
+		
+		e *= (1-Math.pow((max-(1/nClasses)), 2)/nClasses); 
+		
+		return -e;
+	}
+	
 	public static double saturate(double corr, int nOcurrs){
 		double sat = (Math.tanh( (nOcurrs-5)/2.0 ) + 1.0 )/2;
-		//new idea
-		//double sat = (Math.tanh( (Math.log(nOcurrs)-5)/2.0 ) + 1.0 );
+		corr = corr*sat;
+		
+		return corr;
+	}
+	
+	public static double saturateNew(double corr, int nOcurrs){
+		double sat = (Math.tanh( (nOcurrs-15)/5.0 ) + 1.0 )/2;
+		//saturates slower
 		corr = corr*sat;
 		
 		return corr;
@@ -89,7 +123,7 @@ public class Utils {
 		return dist;
 	}
 
-	public static double colorDistance(Color color, int r, int g, int b) {
+	public static synchronized double colorDistance(Color color, int r, int g, int b) {
 		double r1 = color.getRed(); double g1 = color.getGreen(); double b1 = color.getBlue();
 		
 		double dist = (r1-r)*(r1-r)+(g1-g)*(g1-g)+(b1-b)*(b1-b);
@@ -121,33 +155,41 @@ public class Utils {
 		return Math.random()*(2*delta) + (baseline - delta);
 	}
 
-	public static double getKNN(Class[][] identifiedObjects, Prototype prot, MapperAgent mapper, SimEnvironment env,int k, SimObject unknownObj) {
+	public static synchronized double getKNN(Class[][] identifiedObjects, Prototype prot, MapperAgent mapper, SimEnvironment env,int k, SimObject unknownObj) {
 		double dist=0;
 		SimObject obj;
 		ArrayList<KnnObject> objects = new ArrayList();
 		
-		//create list of near objects to unknown object
-		for(int i=0;i<400;i++){
-			for(int j=0;j<300;j++){
-				if(mapper.isIdentified(new Int2D(i,j))){
-					obj=env.identifyObject(new Int2D(i,j));
-					dist=0;
-					dist += colorDistance(unknownObj.getColor(), obj.getColor()) * colorDistance(unknownObj.getColor(), obj.getColor());
-					dist += Math.abs(obj.getSize() - unknownObj.getSize()) * Math.abs(obj.getSize() - unknownObj.getSize());
-					if(objects.size()<10){
-						objects.add(new KnnObject(dist, obj.getClass()));
-						//sorting now so that we always start with a sorted list in the else
+		for(Int2D loc : mapper.identifiedLocations){
+			obj=env.identifyObject(loc);
+			dist=0;
+			dist += colorDistance(unknownObj.getColor(), obj.getColor()) * colorDistance(unknownObj.getColor(), obj.getColor());
+			dist += Math.abs(obj.getSize() - unknownObj.getSize()) * Math.abs(obj.getSize() - unknownObj.getSize());
+			
+			//objects contains most of the time more objects than needed for knn
+			//this is done to reduce the need of sorting
+			if(objects.size()<k*10){
+				objects.add(new KnnObject(dist, obj.getClass()));
+			}
+			else if(objects.size()==k*10){
+				//only sort once
+				objects.add(new KnnObject(dist, obj.getClass()));
+				Collections.sort(objects,(o1,o2)-> Double.compare(o1.getDist(),o2.getDist()));				
+			}
+			else{
+				//only add if smaller than k-smallest element of the k*10 first elements
+				if(dist < objects.get(k).getDist()){
+					//sort again if list becomes to big
+					if(objects.size()%1000 == 0){
 						Collections.sort(objects,(o1,o2)-> Double.compare(o1.getDist(),o2.getDist()));
 					}
-					else{
-						if(dist < objects.get(k-1).getDist()){
-							objects.set(k-1, new KnnObject(dist, obj.getClass()));
-							Collections.sort(objects,(o1,o2)-> Double.compare(o1.getDist(),o2.getDist()));
-						}						
-					}					
+					objects.add(new KnnObject(dist, obj.getClass()));
 				}
-			}
+			}	
 		}
+		
+		//final sorting
+		Collections.sort(objects,(o1,o2)-> Double.compare(o1.getDist(),o2.getDist()));		
 		
 		//count how many objects of the prototype class are inside there
 		double count=0;

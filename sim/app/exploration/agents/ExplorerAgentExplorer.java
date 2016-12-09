@@ -14,8 +14,22 @@ import sim.util.Int2D;
 
 public class ExplorerAgentExplorer extends ExplorerAgentParent {
 	
-	protected float INTEREST_THRESHOLD = 65;
-	protected final int viewRange = 30;
+
+	// protected static final long serialVersionUID = 1L;
+	//protected float INTEREST_THRESHOLD = 0;
+	// protected final double STEP = Math.sqrt(2);
+	protected final int viewRange = 40;
+	
+	// protected int identifyClock;
+
+	// protected Int2D loc;
+	// protected Int2D target;
+	// protected double orientation;
+
+	// public SimEnvironment env;
+	// public BrokerAgent broker;
+	// public MapperAgent mapper;
+	// protected Vector<Prototype> knownObjects;
 
 	// protected boolean GLOBAL_KNOWLEDGE = true;
 	// protected int IDENTIFY_TIME = 15;
@@ -30,98 +44,27 @@ public class ExplorerAgentExplorer extends ExplorerAgentParent {
 		this.agentId = agentId;
 	}
 
-	public void step(SimState state) {
 
-		// The explorer sees the neighboring objects and sends them to the
-		// mapper
-		if (identifyClock == 0) {
-			Bag visible = env.getVisibleObjects(loc.x, loc.y, viewRange);
+	protected int getObjectInterest(Hashtable<Class, Double> probs) {
+		double unknownInterest = 0;
+		double entropyInterest;
+		Vector<Double> prob = new Vector<Double>();
 
-			// -------------------------------------------------------------
-			for (int i = 1; i < visible.size(); i++) {
-				SimObject obj = (SimObject) visible.get(i);
+		for (Class c : probs.keySet()) {
+			if (c == SimObject.class)
+				unknownInterest = Utils.interestFunctionNew(probs.get(c));
 
-				if (!mapper.isIdentified(obj.loc)) {
-					Hashtable<Class, Double> probs = getProbabilityDist(obj);
-
-					float interest = getObjectInterest(probs);
-					//System.out.println("OBJECT AT: (" + obj.loc.x + ","
-					//		+ obj.loc.y + "). INTEREST: " + interest);
-
-					// If not interesting enough, classify it to the highest prob
-					if (interest < INTEREST_THRESHOLD) {
-						Class highest = Utils.getHighestProb(probs);
-
-						mapper.identify(obj, highest);
-						Class real = env.identifyObject(obj.loc).getClass();
-						//if (highest != real)
-						//	System.err.println(real.getSimpleName());
-						
-						broker.removePointOfInterest(obj.loc);
-
-					} else {
-						mapper.addObject(obj);
-						broker.addPointOfInterest(obj.loc, interest);
-
-					}
-				}
-
-			}
-			// --------------------------------------------------------------
-
-			// Check to see if the explorer has reached its target
-			if (target != null) {
-				if (loc.distance(target) == 0) {
-					target = null;
-
-					SimObject obj = env.identifyObject(loc);
-
-					if (obj != null) {
-						broker.removePointOfInterest(obj.loc);
-						mapper.identify(obj, obj.getClass());
-						addPrototype(obj, obj.getClass());
-
-						identifyClock = IDENTIFY_TIME;
-					}
-				}
-			}
-
-			// If the explorer has no target, he has to request a new one from
-			// the broker
-			if (target == null) {
-				target = broker.requestTarget(loc, agentId);
-				//System.out.println("NEW TARGET: X: " + target.x + " Y: "
-				//		+ target.y);
-			}
-
-			// Agent movement
-			Double2D step = new Double2D(target.x - loc.x, target.y - loc.y);
-			step.limit(STEP);
-
-			loc.x += Math.round(step.x);
-			loc.y += Math.round(step.y);
-
-			env.updateLocation(this, loc);
-			mapper.updateLocation(this, loc);
-
-			orientation = Math.atan2(Math.round(step.y), Math.round(step.x));
+			prob.add(probs.get(c));
 		}
-		
-		if (identifyClock > 0)
-			identifyClock--;
-	}
 
-	@Override
-	public double orientation2D() {
-		return orientation;
-	}
+		entropyInterest = Utils.entropy(prob);
 
-	public Int2D getLoc() {
-		return loc;
-	}
+		//System.out.println("ENTROPY: " + entropyInterest + " | UNKNOWN: "
+		//		+ unknownInterest);
 
-	public double getOrientation() {
-		return orientation;
+		double interest = (entropyInterest > unknownInterest ? entropyInterest : unknownInterest) * 100;
+
+		return (int) Math.round(interest);
 	}
 
 }

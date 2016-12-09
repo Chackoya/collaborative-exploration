@@ -16,10 +16,8 @@ import sim.util.WordWrap;
 public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
 	protected static final long serialVersionUID = 1L;
-	protected float INTEREST_THRESHOLD = 65;
 	protected final double STEP = Math.sqrt(2);
 	protected final int viewRange = 40;
-
 	
 	protected int identifyClock;
 
@@ -33,6 +31,12 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 	protected Vector<Prototype> knownObjects;
 	protected int agentId;
 	
+	public final double INTEREST_THRESHOLD_MAX = 80;
+	public double INTEREST_THRESHOLD_STEPS;
+	public double KNN_START;
+	public double INTEREST_THRESHOLD_INITIAL;
+	public double INTEREST_THRESHOLD;
+
 	protected boolean GLOBAL_KNOWLEDGE = true;
 	protected int IDENTIFY_TIME = 15;
 
@@ -129,7 +133,8 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 			prob.add(probs.get(c));
 		}
 
-		entropyInterest = Utils.entropy(prob);
+		//entropyInterest = Utils.entropy(prob);
+		entropyInterest = Utils.entropy2(prob,probs.size());
 
 		//System.out.println("ENTROPY: " + entropyInterest + " | UNKNOWN: "
 		//		+ unknownInterest);
@@ -180,9 +185,11 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 		
 		//change setup
 		Boolean oldCorrelation = false;
+		Boolean weighted = false;
 		int outOfQuantile = 0;
 		
 		if(oldCorrelation){
+			INTEREST_THRESHOLD = 65;
 			for (Prototype prot : prototypes) {
 				// TODO: Stuff here
 				double corr;
@@ -192,7 +199,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				// Correlation
 				corr = 1 - (0.5 * colorDist + 0.5 * sizeDist);
 				// Saturation
-				corr = Utils.saturate(corr, prot.nOccurrs);
+				corr = Utils.saturateNew(corr, prot.nOccurrs);
 
 				probs.put(prot.thisClass, corr*corr*corr);
 				corrSum += corr*corr*corr;
@@ -224,43 +231,28 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 				
 				// Correlation and saturation
 				corr1 = 1 - (0.5 * colorDistMedian + 0.5 * sizeDistMedian);
-				corr1 = Utils.saturate(corr1, prot.nOccurrs);
+				corr1 = Utils.saturateNew(corr1, prot.nOccurrs);
 
 				corr2 = 1 - (0.5 * colorDistLower + 0.5 * sizeDistLower);
-				corr2 = Utils.saturate(corr2, prot.nOccurrs);
+				corr2 = Utils.saturateNew(corr2, prot.nOccurrs);
 
 				corr3 = 1 - (0.5 * colorDistUpper + 0.5 * sizeDistUpper);
-				corr3 = Utils.saturate(corr3, prot.nOccurrs);
+				corr3 = Utils.saturateNew(corr3, prot.nOccurrs);
 				
 				corr = (corr1+corr2+corr3)/3;
 				
 				Class[][] identifiedObjects = mapper.identifiedObjects;
 				int k=Math.min(prot.nOccurrs, 10);
-				if(nClasses>=2 && prot.nOccurrs>60){
+				if(nClasses>=2 && prot.nOccurrs>KNN_START){
 					double knnCor = Utils.getKNN(identifiedObjects,prot,mapper,env,k,obj);
-					//System.out.println("============");
-					//System.out.println(knnCor);
-					INTEREST_THRESHOLD = 45;
-					//corr = Math.max(1, knnCor*2);
-					corr = knnCor;
-				}
-				if(nClasses>2 && prot.nOccurrs>65){
-					INTEREST_THRESHOLD = 50;
-				}
-				if(nClasses>2 && prot.nOccurrs>70){
-					INTEREST_THRESHOLD = 55;
-				}
-				if(nClasses>2 && prot.nOccurrs>80){
-					INTEREST_THRESHOLD = 60;
-				}
-				if(nClasses>2 && prot.nOccurrs>90){
-					INTEREST_THRESHOLD = 65;
-				}
-				if(nClasses>2 && prot.nOccurrs>100){
-					INTEREST_THRESHOLD = 70;
-				}
-				if(nClasses>2 && prot.nOccurrs>110){
-					INTEREST_THRESHOLD = 75;
+
+					INTEREST_THRESHOLD = Math.min(INTEREST_THRESHOLD_MAX, 
+							INTEREST_THRESHOLD_INITIAL+((INTEREST_THRESHOLD_MAX - INTEREST_THRESHOLD_INITIAL)/INTEREST_THRESHOLD_STEPS)*(prot.nOccurrs-KNN_START));
+					
+					if(weighted && prot.nOccurrs>= KNN_START && prot.nOccurrs<= (KNN_START+INTEREST_THRESHOLD_STEPS/2))
+						corr = 0.9*knnCor + 0.1*corr;
+					else
+						corr = knnCor;
 				}
 				
 				probs.put(prot.thisClass, corr);

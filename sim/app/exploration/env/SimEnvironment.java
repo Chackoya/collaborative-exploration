@@ -30,14 +30,16 @@ public class SimEnvironment implements Steppable{
 
 	private SparseGrid2D world;
 	
-	List<String> ExplorerTypes = Arrays.asList(
+	private List<String> ExplorerTypes = Arrays.asList(
 			"sim.app.exploration.agents.ExplorerAgentOriginal",
 			"sim.app.exploration.agents.ExplorerAgentExplorer"
 	);
-	List<Integer> ExplorerAmounts = Arrays.asList(
-			2,
-			2
+	private List<Integer> ExplorerAmounts = Arrays.asList(
+			9,
+			0
 	);
+	private int TotalExplorerAmount;
+	private Vector<Integer> UsedAgentIds = new Vector<Integer>();
 	
 	private Vector<ExplorerAgentParent> explorers;
 	private MapperAgent mapper;
@@ -61,7 +63,7 @@ public class SimEnvironment implements Steppable{
 			System.out.println("Adding " + this.ExplorerAmounts.get(i) + " explorers");
 			totalSumOfExplorers += this.ExplorerAmounts.get(i);
 		}
-
+		this.TotalExplorerAmount = totalSumOfExplorers;
 		System.out.println("Total of " + totalSumOfExplorers + " explorers");
 
 		this.explorers = new Vector<ExplorerAgentParent>(totalSumOfExplorers);
@@ -100,6 +102,7 @@ public class SimEnvironment implements Steppable{
 			String ExplorerType = ExplorerTypes.get(i);
 			int ExplorerAmount = ExplorerAmounts.get(i);
 			for(int k= 0; k < ExplorerAmount; k++){
+				//Int2D loc = new Int2D(0,0);
 				Int2D loc = new Int2D(state.random.nextInt(world.getWidth()),state.random.nextInt(world.getHeight()));
 				System.out.println("Adding explorer " + ExplorerType);
 				addExplorer(state, loc, ExplorerType);			
@@ -116,7 +119,13 @@ public class SimEnvironment implements Steppable{
 		try {
 			explorerType = Class.forName(usedExplorerType);
 			ctor = explorerType.getConstructor(Int2D.class, int.class);
-			Object explorerObj = ctor.newInstance(loc, agentCounter++);
+			int agentId = -1;
+			while (this.UsedAgentIds.contains(agentId) || agentId == -1) {
+				agentId = state.random.nextInt(this.TotalExplorerAmount);				
+			}
+			this.UsedAgentIds.addElement(agentId);
+			System.out.println("Adding agent with id " + agentId);
+			Object explorerObj = ctor.newInstance(loc, agentId);
 			explorer = (ExplorerAgentParent) explorerObj;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -131,7 +140,11 @@ public class SimEnvironment implements Steppable{
 		explorer.env = this;
 		explorer.mapper = mapper;
 		explorer.broker = broker;
-		System.out.println("Explorer object added");
+		explorer.INTEREST_THRESHOLD_INITIAL = (Math.max(35, 55-(Math.sqrt(getExplorerAmount()))*5));
+		explorer.INTEREST_THRESHOLD = explorer.INTEREST_THRESHOLD_INITIAL;
+		explorer.KNN_START = 60-(3-Math.min(3,Math.log(getExplorerAmount())*getExplorerAmount()))*5;
+		explorer.INTEREST_THRESHOLD_STEPS = 40+Math.sqrt(getExplorerAmount())*5;
+		System.out.println("Explorer object added with interest threshold "+explorer.INTEREST_THRESHOLD);
 
 	}
 	
@@ -295,6 +308,9 @@ public class SimEnvironment implements Steppable{
 		if( step%stepCheckpoint == 0 ){
 			printStats();
 		}
+		if(step%250 == 0){
+			System.gc();
+		}
 		
 		/*
 		 * Step over all the explorers in the environment, making them step
@@ -380,6 +396,15 @@ public class SimEnvironment implements Steppable{
 	public void updateLocation(ExplorerAgentParent agent, Int2D loc) {
 		
 		world.setObjectLocation(agent, loc);	
+	}
+	
+	private int getExplorerAmount(){
+		int res = 0;
+		for(int n : ExplorerAmounts){
+			res += n;
+		}
+		
+		return res;
 	}
 
 }

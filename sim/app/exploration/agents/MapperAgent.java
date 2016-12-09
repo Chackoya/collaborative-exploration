@@ -15,10 +15,12 @@ public class MapperAgent {
 	public SparseGrid2D knownWorld;
 	public Class[][] identifiedObjects;
 	public Vector<Prototype> knownObjects;
+	public Vector<Int2D> identifiedLocations;
 	
 	public MapperAgent(int width, int height){
 		knownWorld = new SparseGrid2D(width, height);
 		identifiedObjects = new Class[width][height];
+		identifiedLocations = new Vector<Int2D>();
 		this.knownObjects = new Vector<Prototype>();
 	}
 	
@@ -58,6 +60,7 @@ public class MapperAgent {
 		Int2D loc = obj.loc;
 		
 		identifiedObjects[loc.x][loc.y] = highest;
+		identifiedLocations.add(loc);
 	
 		Class[] params = {Int2D.class, Color.class, double.class};
 		Object[] args = {obj.loc, obj.color, obj.size};
