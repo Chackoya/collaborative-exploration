@@ -39,24 +39,37 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 
 	protected boolean GLOBAL_KNOWLEDGE = true;
 	protected int IDENTIFY_TIME = 15;
-
+	protected boolean addedToBroker = false;
+	
 	public void step(SimState state) {
-
+		if (!addedToBroker) {
+			addedToBroker = true;
+			broker.addAgentInfo(new AgentInfo(agentId, this.getClass().getSimpleName(), loc));
+		}
 		// The explorer sees the neighboring objects and sends them to the
 		// mapper
 		if (identifyClock == 0) {
 			Bag visible = env.getVisibleObjects(loc.x, loc.y, viewRange);
-
+			boolean agentPoIStatus = (this.broker.getAgentInfo(agentId).targetType == "poi");
 			// -------------------------------------------------------------
 			for (int i = 1; i < visible.size(); i++) {
 				SimObject obj = (SimObject) visible.get(i);
 
+				// if agent does not have a poi
+				if (!agentPoIStatus && obj != null) {
+					Hashtable<Class, Double> probs = getProbabilityDist(obj);
+					Class highest = Utils.getHighestProb(probs);
+										
+					if (highest != null && !highest.isInstance(obj)) {
+						//System.out.println("FOUND AND OBJECT THAT IS NOT WHAT IT LOOKS LIKE");
+						//System.out.println(obj.getClass().getName() + " - " + highest.getName());
+					}
+				}
+				
 				if (!mapper.isIdentified(obj.loc)) {
 					Hashtable<Class, Double> probs = getProbabilityDist(obj);
 
 					float interest = getObjectInterest(probs);
-					//System.out.println("OBJECT AT: (" + obj.loc.x + ","
-					//		+ obj.loc.y + "). INTEREST: " + interest);
 
 					// If not interesting enough, classify it to the highest prob
 					if (interest < INTEREST_THRESHOLD) {

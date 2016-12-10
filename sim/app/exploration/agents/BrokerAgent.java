@@ -17,30 +17,41 @@ public class BrokerAgent {
 	private ArrayList<PointOfInterest> pointsOfInterest;
 	private ArrayList<PointOfInterest> removedPoIs;
 	private ExploringAreas ExplorableAreas;
-	private HashMap<Integer, Int2D> agentLocations = new HashMap<Integer, Int2D>();
+	private HashMap<Integer, AgentInfo> agents = new HashMap<Integer, AgentInfo>();
+	private boolean USE_CLUSTERING = true;
 	
 	public BrokerAgent() {
 		this.pointsOfInterest = new ArrayList<PointOfInterest>();
 		this.removedPoIs = new ArrayList<PointOfInterest>();
 		// Change this to change the clustering method
-		this.ExplorableAreas = new ExploringRectangles();
+		this.ExplorableAreas = new ExploringRectangles(USE_CLUSTERING);
 	}
 	
-	public Int2D requestTarget(Int2D agentPos, int agentId) {
-		if (agentLocations.get(agentId) == null) {
-			System.out.println("Agent " + agentId + " asking for first target");
+	public void addAgentInfo(AgentInfo info) {
+		System.out.println("Adding to broker agent " + info.agentId + " of type " + info.agentType);
+		if (agents.get(info.agentId) == null) {
+			agents.put(info.agentId, info);
+			System.out.println("Added agent " + info.agentId);			
 		}
-		agentLocations.put(agentId, agentPos);
-		ExplorableAreas.createAreasFromPoIs(pointsOfInterest, agentLocations);
+	}
+	
+	public AgentInfo getAgentInfo(int agentId) {
+		return agents.get(agentId);		
+	}
+	
+	public Int2D requestTarget(Int2D agentPos, int agentId) {		
+		agents.get(agentId).location = agentPos;
+		
+		ExplorableAreas.createAreasFromPoIs(pointsOfInterest, agents);
 		
 		Int2D target = null;
 		PointOfInterest target_PoI = null;
-		
+
 		// If we have no points of interest, return a random point
-		if (pointsOfInterest.size() == 0)
-			return getRandomTarget();
-			//return getLimitedRandomTarget(agentPos);
-		
+		if (pointsOfInterest.size() == 0) {
+			this.agents.get(agentId).targetType = "random";
+			return getLimitedRandomTarget(agentPos, agentId);					
+		}
 		// Else, find the best point of Interest
 		else {
 			
@@ -58,6 +69,7 @@ public class BrokerAgent {
 				}
 				
 				if (score > bestScore && insideStripe) {
+					this.agents.get(agentId).targetType = "poi";
 					bestScore = score;
 					target = PoI.loc;
 					target_PoI = PoI;
@@ -67,7 +79,7 @@ public class BrokerAgent {
 			
 			// If the target is too far, send a random target
 			if (bestScore < 0) {
-				System.out.println("Found random target for agent " + agentId + " at " + agentPos.x + "," + agentPos.y);
+				this.agents.get(agentId).targetType = "random";
 				return getLimitedRandomTarget(agentPos, agentId);				
 			}
 			
@@ -106,22 +118,19 @@ public class BrokerAgent {
 	
 	public Int2D getLimitedRandomTarget(Int2D agentPos, int agentId) {
 		Int2D target = null;
-		
-		while (true) {
-			target = getRandomTarget();
-			System.out.println("Trying random target " + target.x + "," + target.y + " for agent " + agentId + " in " + agentPos.x + "," + agentPos.y);
 
-			boolean insideStripe = false;
-			boolean stripesAvailable = false;
-			if (ExplorableAreas != null && ExplorableAreas.getAreaCount() > 0 && ExplorableAreas.getArea(agentId) != null) {
-				insideStripe = ExplorableAreas.getArea(agentId).locInsideArea(target);
-				stripesAvailable = true;
-			}
-			
-			if ((agentPos.distance(target) <= Simulator.limitRadius && !stripesAvailable) || insideStripe)
-				break;
+		if (ExplorableAreas != null && ExplorableAreas.getArea(agentId) != null) {
+			target = ExplorableAreas.getArea(agentId).getRandomPointInsideArea();
+		} else {
+			while (true) {
+				target = getRandomTarget();
+				if (agentPos.distance(target) <= Simulator.limitRadius) {
+					break;
+				}
+			}			
 		}
-		
+		//System.out.println("Found random target" + target.x + "," + target.y + " for agent " + agentId);
+
 		return target; 
 	}
 	
@@ -153,18 +162,37 @@ class PointOfInterest {
 
 // HELPING CLASSES IMPLEMENTED DURING THE AI ASSIGNMENT
 
+class AgentInfo {
+	
+	// "poi" or "random" used
+	public String targetType;
+	public Int2D target;
+	public Int2D location;
+	
+	// "ExplorerAgentOriginal" or "ExplorerAgentExplorer"
+	public String agentType;
+	public int agentId;
+	
+	AgentInfo(int id, String type, Int2D loc) {
+		agentId = id;
+		agentType = type;
+		location = loc;
+	}
+}
+
 // Interfaces for clustering
 interface ExploringArea {
 	public boolean locInsideArea(Int2D loc);
+	public Int2D getRandomPointInsideArea();
 };
 
 interface ExploringAreas {
-	void createAreasFromPoIs(ArrayList<PointOfInterest> pointsOfInterest, HashMap<Integer, Int2D> agentLocations);
+	void createAreasFromPoIs(ArrayList<PointOfInterest> pointsOfInterest, HashMap<Integer, AgentInfo> agents);
 	ExploringArea getArea(int id);
 	int getAreaCount();
 };
 
-
+// Clustering implementations
 class ExploringRectangle implements ExploringArea{
 	private Int2D upperLeft;
 	private Int2D bottomRight;
@@ -181,6 +209,13 @@ class ExploringRectangle implements ExploringArea{
 			return false;
 		}
 	}
+	
+	public Int2D getRandomPointInsideArea() {
+		double x = upperLeft.x + Math.random() * (bottomRight.x - upperLeft.x);
+		double y = upperLeft.y + Math.random() * (bottomRight.y - upperLeft.y);
+		
+		return new Int2D((int) x, (int) y);
+	};
 }
 
 class ExploringRectangles implements ExploringAreas{
@@ -194,9 +229,11 @@ class ExploringRectangles implements ExploringAreas{
 	
 	private int lastXRange = 0;
 	private int lastYRange = 0;
+	private boolean use_clustering;
 	
-	ExploringRectangles() {
+	ExploringRectangles(boolean USE_CLUSTERING) {
 		agentAreas = new HashMap<Integer, ExploringRectangle>();
+		use_clustering = USE_CLUSTERING;
 	}
 	
 	public ExploringArea getArea(int id) {
@@ -207,9 +244,14 @@ class ExploringRectangles implements ExploringAreas{
 		return agentAreas.size();
 	}
 	
-	public void createAreasFromPoIs(ArrayList<PointOfInterest> pointsOfInterest, HashMap<Integer, Int2D> agentLocations) {
-		if (agentLocations.size() < 2) {return;}
+	public void createAreasFromPoIs(ArrayList<PointOfInterest> pointsOfInterest, HashMap<Integer, AgentInfo> agents) {
+		if (agents.size() < 2 || !this.use_clustering) {
+			for (Map.Entry<Integer, AgentInfo> entry : agents.entrySet()) {
+				agentAreas.put(entry.getKey(), new ExploringRectangle(new Int2D(0,0),new Int2D(Simulator.WIDTH, Simulator.HEIGHT)));
+			}
+		}
 		if (creationCounter >= 0 && creationCounter < 10) {creationCounter++; return;}
+		
 		creationCounter = 0;
 		
 		int maxX = 0;
@@ -236,16 +278,26 @@ class ExploringRectangles implements ExploringAreas{
 		if (lastXRange == xRange && lastYRange == yRange) {
 			return;
 		}
-	
+
+		System.out.println("Trying to divide agents to clusters with " + pointsOfInterest.size() + " PoIs in ranges " + xRange + "," + yRange);
+		
 		lastXRange = xRange;
 		lastYRange = yRange;
 		
-		int agentCount = agentLocations.size();
-		System.out.println("Creating rectangle cluster with " + agentCount + " agents");
+		int agentCount = 0;
+		
+		for (Map.Entry<Integer, AgentInfo> entry : agents.entrySet()) {
+			System.out.println("Checking if agent " + entry.getValue().agentType + "  is right type");
+			if (entry.getValue().agentType.equals("ExplorerAgentExplorer")) {
+				System.out.println("It was");
+				agentCount++;
+			}
+		}
+		
+		System.out.println("Creating rectangle cluster with " + agentCount + " of" + agents.size() + "agents");
 		double rows;
 		double cols;
 		
-		// 2,3,4,6,8,9
 		if (agentCount >= 12) {
 			rows = 3;
 			cols = 4;
@@ -274,11 +326,11 @@ class ExploringRectangles implements ExploringAreas{
 
 		double counter = 0;
 		
-		for (Map.Entry<Integer, Int2D> entry : agentLocations.entrySet()) {
+		for (Map.Entry<Integer, AgentInfo> entry : agents.entrySet()) {
 			double row = Math.floor(counter / cols);
 			double col = counter%cols;
 			
-			if (row < rows) {
+			if (row < rows && entry.getValue().agentType.equals("ExplorerAgentExplorer")) {
 				int ulx = (int) Math.round(minimumX + col * areaWidth);
 				int uly = (int) Math.round(minimumY + row * areaHeight);
 
@@ -289,6 +341,7 @@ class ExploringRectangles implements ExploringAreas{
 				Int2D brc = new Int2D(brx, bry);
 
 				System.out.println("Rows: " + rows + " Cols: " + cols + " Counter: " + counter + " Row: " + row + " Col: " + col);
+				counter++;
 
 				agentAreas.put(entry.getKey(), new ExploringRectangle(ulc,brc));
 			} else {
@@ -304,7 +357,6 @@ class ExploringRectangles implements ExploringAreas{
 				System.out.println("Rows: " + rows + " Cols: " + cols + " Counter: " + counter + " Row: " + row + " Col: " + col + " having a full map to explore");
 				agentAreas.put(entry.getKey(), new ExploringRectangle(ulc,brc));
 			}
-			counter++;
 		}	
 	}
 }
