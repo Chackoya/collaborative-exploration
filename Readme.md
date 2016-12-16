@@ -1,12 +1,30 @@
-h1. Collaborative Exploration of Unknown Environments with a Team of Agents
+# Collaborative Exploration of Unknown Environments with a Team of Agents
 
-p. In this project, we will focus mainly on the algorithm used by the agents to decide which locations it should explore next, using an approach using affective agents. The coordination aspects of the problem will be dealt with solutions found in recent research in the field.
+This repository was used for the Artificial Intelligence course at the University of Coimbra. The contributors are
+* Jani Hilliaho
+* Sebastian Rehfeldt
+* Miguel Tavares (author of the initial system)
+* Pedro Gaspar (author of the initial system)
 
-h2. Authors
+## Goal
 
-* Miguel Tavares
-* Pedro Gaspar
+During this project, a new approach for exploring unknown environments was studied. This approach is based on the idea that object classes could be predicted over range instead of walking there and using a (longer) full examination. This might be the case when objects are not interesting enough to go there.
 
-Prosecution done by
-Jani Hilliaho
-Sebastian Rehfeldt
+Different strategies have been created and compared. The results can be seen in the paper.
+
+## Installation (using Eclipse)
+
+* Install Mason (http://cs.gmu.edu/~eclab/projects/mason/)
+* Pull repository
+* Create new Java project
+* Link exploration folder as source folder
+* Add external jars for Mason (Libraries tab)
+* Run viewer
+* Cross fingers and enjoy!
+
+## Run options
+
+* Change to old classification in the explorer parent class by changing the boolean value oldCorrelation
+* Change agent types and amounts in SimEnvironment by adjusting the ExplorerAmounts list
+* Change map type and starting point in SimEnvironment
+* Change clustering in BrokerAgent by USE_CLUSTERING
