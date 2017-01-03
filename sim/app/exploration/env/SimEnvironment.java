@@ -34,10 +34,12 @@ public class SimEnvironment implements Steppable{
 			"sim.app.exploration.agents.ExplorerAgentOriginal",
 			"sim.app.exploration.agents.ExplorerAgentExplorer"
 	);
+	
 	private List<Integer> ExplorerAmounts = Arrays.asList(
-			5,
-			5
+			2,
+			4
 	);
+	
 	private int TotalExplorerAmount;
 	private Vector<Integer> UsedAgentIds = new Vector<Integer>();
 	

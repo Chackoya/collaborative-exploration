@@ -14,12 +14,14 @@ public class MapperAgent {
 
 	public SparseGrid2D knownWorld;
 	public Class[][] identifiedObjects;
+	public Class[][] stronglyIdentifiedObjects;
 	public Vector<Prototype> knownObjects;
 	public Vector<Int2D> identifiedLocations;
 	
 	public MapperAgent(int width, int height){
 		knownWorld = new SparseGrid2D(width, height);
 		identifiedObjects = new Class[width][height];
+		stronglyIdentifiedObjects = new Class[width][height];
 		identifiedLocations = new Vector<Int2D>();
 		this.knownObjects = new Vector<Prototype>();
 	}
@@ -53,7 +55,7 @@ public class MapperAgent {
 		return identifiedObjects[loc.x][loc.y] != null;
 	}
 
-	public void identify(SimObject obj, Class highest) {
+	public void identify(SimObject obj, Class highest, boolean stronglyIdentified) {
 		
 		//System.out.println("IDENTIFYING OBJ AT (" + obj.loc.x + "," + obj.loc.y + ") AS " + highest.getName());
 		
@@ -61,8 +63,12 @@ public class MapperAgent {
 		
 		identifiedObjects[loc.x][loc.y] = highest;
 		identifiedLocations.add(loc);
+		
+		if (stronglyIdentified) {
+			stronglyIdentifiedObjects[loc.x][loc.y] = highest;
+		}
 	
-		Class[] params = {Int2D.class, Color.class, double.class};
+		Class [] params = {Int2D.class, Color.class, double.class};
 		Object[] args = {obj.loc, obj.color, obj.size};
 		
 		if(highest.isInstance(obj)){
@@ -100,6 +106,26 @@ public class MapperAgent {
 		
 	}
 
+	public void deIdentify(SimObject obj) {
+		identifiedObjects[obj.loc.x][obj.loc.y] = null;
+		identifiedLocations.remove(obj.loc);
+	}
+	
+	public boolean isObjectWhatItLooksLike(SimObject object, Class highest) {
+		
+		Class obj = identifiedObjects[object.loc.x][object.loc.y];
+		Class strongObj = stronglyIdentifiedObjects[object.loc.x][object.loc.y];
+		
+		String original = obj.getSimpleName();
+		String predict = highest.getSimpleName();
+
+		if (!original.equals(predict) && strongObj == null) {
+			return false;
+		}
+				
+		return true;
+	}
+	
 	public void addPrototype(SimObject obj, Class class1) {
 		for(Prototype p : this.knownObjects){
 			if(class1 == p.thisClass){

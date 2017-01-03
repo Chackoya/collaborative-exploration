@@ -96,6 +96,13 @@ public class BrokerAgent {
 		return target;
 	}
 	
+	public void reAddPointOfInterest(Int2D point, double interestMeasure) {
+		PointOfInterest PoI = new PointOfInterest(point, interestMeasure);
+		if (!pointsOfInterest.contains(PoI)) {
+			pointsOfInterest.add(PoI);
+			//System.out.println("[Broker] PoI added: " + PoI.loc);
+		}
+	}	
 	public void addPointOfInterest(Int2D point, double interestMeasure) {
 		PointOfInterest PoI = new PointOfInterest(point, interestMeasure);
 		if (!pointsOfInterest.contains(PoI) && !removedPoIs.contains(PoI)) {
@@ -287,14 +294,13 @@ class ExploringRectangles implements ExploringAreas{
 		int agentCount = 0;
 		
 		for (Map.Entry<Integer, AgentInfo> entry : agents.entrySet()) {
-			System.out.println("Checking if agent " + entry.getValue().agentType + "  is right type");
+			//System.out.println("Checking if agent " + entry.getValue().agentType + "  is right type");
 			if (entry.getValue().agentType.equals("ExplorerAgentExplorer")) {
-				System.out.println("It was");
 				agentCount++;
 			}
 		}
 		
-		System.out.println("Creating rectangle cluster with " + agentCount + " of" + agents.size() + "agents");
+		System.out.println("Creating rectangle cluster with " + agentCount + " of " + agents.size() + " agents");
 		double rows;
 		double cols;
 		
@@ -340,7 +346,7 @@ class ExploringRectangles implements ExploringAreas{
 				Int2D ulc = new Int2D(ulx, uly);
 				Int2D brc = new Int2D(brx, bry);
 
-				System.out.println("Rows: " + rows + " Cols: " + cols + " Counter: " + counter + " Row: " + row + " Col: " + col);
+				//System.out.println("Rows: " + rows + " Cols: " + cols + " Counter: " + counter + " Row: " + row + " Col: " + col);
 				counter++;
 
 				agentAreas.put(entry.getKey(), new ExploringRectangle(ulc,brc));
@@ -354,7 +360,7 @@ class ExploringRectangles implements ExploringAreas{
 				Int2D ulc = new Int2D(ulx, uly);
 				Int2D brc = new Int2D(brx, bry);
 
-				System.out.println("Rows: " + rows + " Cols: " + cols + " Counter: " + counter + " Row: " + row + " Col: " + col + " having a full map to explore");
+				//System.out.println("Rows: " + rows + " Cols: " + cols + " Counter: " + counter + " Row: " + row + " Col: " + col + " having a full map to explore");
 				agentAreas.put(entry.getKey(), new ExploringRectangle(ulc,brc));
 			}
 		}	
