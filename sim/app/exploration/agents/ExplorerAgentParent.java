@@ -40,7 +40,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 	protected boolean GLOBAL_KNOWLEDGE = true;
 	protected int IDENTIFY_TIME = 15;
 	protected boolean addedToBroker = false;
-	protected boolean RECLASSIFICY = true;
+	protected boolean USE_RECLASSIFICATION = true;
 	protected int RECLASSIFY_MAX_AMOUNT = 4;
 	
 	public void step(SimState state) {
@@ -81,7 +81,7 @@ public class ExplorerAgentParent implements sim.portrayal.Oriented2D {
 					}
 				}
 				// Else if ... reclassify object if it isn't what it looks like
-				else if (this.getClass().getSimpleName().equals("ExplorerAgentExplorer") && !agentPoIStatus && obj != null && reclassifyCounter < RECLASSIFY_MAX_AMOUNT && Math.random() > 0.9) {
+				else if (USE_RECLASSIFICATION && this.getClass().getSimpleName().equals("ExplorerAgentExplorer") && !agentPoIStatus && obj != null && reclassifyCounter < RECLASSIFY_MAX_AMOUNT && Math.random() > 0.9) {
 					Hashtable<Class, Double> probs = getProbabilityDist(obj);
 					Class highest = Utils.getHighestProb(probs);					
 					if (!mapper.isObjectWhatItLooksLike(obj, highest)) {					
