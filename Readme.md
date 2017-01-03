@@ -24,7 +24,8 @@ Different strategies have been created and compared. The results can be seen in 
 
 ## Run options
 
-* Change to old classification in the explorer parent class by changing the boolean value oldCorrelation
+* Change to old classification in the ExplorerAgentParent by changing the boolean value oldCorrelation
 * Change agent types and amounts in SimEnvironment by adjusting the ExplorerAmounts list
 * Change map type and starting point in SimEnvironment
 * Change clustering in BrokerAgent by USE_CLUSTERING
+* Change reclassification in ExplorerAgentParent by USE_RECLASSIFICATION
